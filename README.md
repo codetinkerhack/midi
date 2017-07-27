@@ -1,9 +1,18 @@
 # A simple Scala MIDI library
 
-This library originated as a simple project where I was experimenting with Music/MIDI and Scala at the same time.
+This library originated as a result of experimenting with Music/MIDI using Scala.
 It was fun and hopefully useful :)
 
 This library introduces MidiNode component that can be Receiver and Transmitter at the same time.
+Library has several concrete implementations of MidiNode:
+ * MidiFunction - Takes function of Midi note => List of Midi notes
+ * MidiDelay
+ * ChordTransformer
+ * ChordAnalyzer
+ * MidiUtil.debugMidi
+ * DummyReceiver (just consume MidiMessages and does nothing else)
+
+Have a look at example folder to see how it can be utilised to build a midi setup like Keytar (that consist of two separate midi keyboards).
 
 MidiNodes can be chained and connected to inputs and outputs of other MidiNodes. 
 Same output can be connected to several other MidiNodes
