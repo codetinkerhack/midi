@@ -1,4 +1,4 @@
-package com.codetinkerhack.toys
+package com.codetinkerhack.example
 
 import java.lang.System._
 import javax.sound.midi._

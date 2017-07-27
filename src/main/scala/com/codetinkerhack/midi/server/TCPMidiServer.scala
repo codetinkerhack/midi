@@ -1,19 +1,12 @@
 package com.codetinkerhack.midi.server
 
-import java.io.IOException
-import java.io.InputStream
-import java.io.OutputStream
-import java.net.ServerSocket
-import java.net.Socket
-import javax.sound.midi.InvalidMidiDataException
-import javax.sound.midi.MidiMessage
-import javax.sound.midi.Receiver
-import javax.sound.midi.ShortMessage
-import javax.sound.midi.Transmitter
+import java.io.{IOException, InputStream, OutputStream}
+import java.net.{ServerSocket, Socket}
+import javax.sound.midi.{InvalidMidiDataException, Receiver, ShortMessage, Transmitter}
+
 import scala.beans.BeanProperty
 
 //remove if not needed
-import scala.collection.JavaConversions._
 
 class TCPMidiServer() extends Runnable with Transmitter {
 

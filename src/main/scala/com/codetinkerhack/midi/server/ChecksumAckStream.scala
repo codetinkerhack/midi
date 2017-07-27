@@ -1,11 +1,7 @@
 package com.codetinkerhack.midi.server
 
-import java.io.IOException
-import java.io.InputStream
-import java.io.OutputStream
+import java.io.{InputStream, OutputStream}
 import java.util.HashMap
-//remove if not needed
-import scala.collection.JavaConversions._
 
 class ChecksumAckStream(var is: InputStream, var os: OutputStream) extends InputStream {
 

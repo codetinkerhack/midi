@@ -1,14 +1,9 @@
 package com.codetinkerhack.midi.server
 
 import java.io.IOException
-import java.net.DatagramPacket
-import java.net.DatagramSocket
-import java.net.SocketException
-import javax.sound.midi.InvalidMidiDataException
-import javax.sound.midi.ShortMessage
-import javax.sound.midi.Transmitter
+import java.net.{DatagramPacket, DatagramSocket, SocketException}
+import javax.sound.midi.{InvalidMidiDataException, ShortMessage, Transmitter}
 //remove if not needed
-import scala.collection.JavaConversions._
 
 class UDPMidiServer() {
 

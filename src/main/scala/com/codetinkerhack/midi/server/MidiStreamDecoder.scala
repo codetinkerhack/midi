@@ -1,27 +1,9 @@
 package com.codetinkerhack.midi.server
 
-import java.util.ArrayList
-import java.util.List
-import java.io.IOException
 import java.io.InputStream
-import javax.sound.midi.InvalidMidiDataException
-import javax.sound.midi.MetaMessage
-import javax.sound.midi.MidiMessage
-import javax.sound.midi.ShortMessage
-import javax.sound.midi.SysexMessage
-//remove if not needed
-import scala.collection.JavaConversions._
+import javax.sound.midi._
 
-class MidiStreamDecoder {
-
-  var is: InputStream = null
-
- // throw new Exception("Please use other constructor that takes InputStream")
-
-  def this(is: InputStream) {
-    this()
-    this.is = is
-  }
+class MidiStreamDecoder(val is: InputStream) {
 
   def readMidiMessage(): MidiMessage = {
     var runningStatus = -1

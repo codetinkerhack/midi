@@ -1,17 +1,11 @@
 package com.codetinkerhack.midi.server
 
 import java.io._
-import javax.sound.midi.InvalidMidiDataException
-import javax.sound.midi.MidiMessage
-import javax.sound.midi.Receiver
-import javax.sound.midi.ShortMessage
-import javax.sound.midi.Transmitter
-import jssc.SerialPort
-import jssc.SerialPortException
-import scala.beans.BeanProperty
+import javax.sound.midi.{InvalidMidiDataException, Receiver, ShortMessage, Transmitter}
 
-//remove if not needed
-import scala.collection.JavaConversions._
+import jssc.{SerialPort, SerialPortException}
+
+import scala.beans.BeanProperty
 
 class ComPortServer(var portID: String,
     var baudRate: Int, 
