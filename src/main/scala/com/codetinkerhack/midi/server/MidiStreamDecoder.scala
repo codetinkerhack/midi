@@ -12,7 +12,7 @@ class MidiStreamDecoder(val is: InputStream) {
     val sbyte = is.read()
     if (sbyte < 0xf0) {
       var sm: ShortMessage = null
-      sbyte match {
+      sbyte & 0xf0 match {
         case ShortMessage.NOTE_OFF => 
           sm = new ShortMessage()
           var v = is.read()

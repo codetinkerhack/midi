@@ -7,11 +7,11 @@ import jssc.{SerialPort, SerialPortException}
 
 import scala.beans.BeanProperty
 
-class ComPortServer(var portID: String,
-    var baudRate: Int, 
-    var dataBits: Int, 
-    var stopBits: Int, 
-    var parity: Int) extends Runnable with Transmitter {
+class ComPortMidiServer(var portID: String,
+                        var baudRate: Int,
+                        var dataBits: Int,
+                        var stopBits: Int,
+                        var parity: Int) extends Runnable with Transmitter {
 
   var serialPort: SerialPort = _
 
