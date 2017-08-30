@@ -8,8 +8,6 @@ import scala.collection.immutable.TreeMap
 /**
   * Created by Evgeniy on 27/04/2015.
   */
-
-
 class MidiDelay() extends MidiNode {
 
 

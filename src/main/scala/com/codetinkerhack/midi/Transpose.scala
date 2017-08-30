@@ -3,16 +3,16 @@ package com.codetinkerhack.midi
 import javax.sound.midi.{MidiMessage, ShortMessage}
 
 /**
-  * Created by Evgeniy on 28/02/2016.
+  * Created by Evgeniy on 30/08/2016.
   */
-case class Router(out: Int) extends MidiNode {
+case class Transpose(i: Int)  extends MidiNode {
 
   override def receive(message: Option[MidiMessage], timeStamp: Long): Unit = {
     message match {
       case Some(m: ShortMessage) => {
-        val newMessage = Some(new ShortMessage(m.getCommand, out, m.getData1, m.getData2))
+        val newMessage = Some(new ShortMessage(m.getCommand, m.getChannel, m.getData1+i, m.getData2))
 
-        send(newMessage,timeStamp)
+        send(newMessage, timeStamp)
       }
       case _ =>
     }
