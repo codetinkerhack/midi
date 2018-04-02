@@ -24,7 +24,7 @@ object Keytar2 extends App {
     val inputMidi = MidiNode(input.getTransmitters.get(0))
     val inputMidi1 = MidiNode(input1.getTransmitters.get(0))
 
-    inputMidi.out(0).connect(MidiUtil.debugMidi).out(0).connect(Router(1)).out(1).connect(outputMidi);
+    inputMidi.out(0).connect(MidiUtil.debugMidi).out(0).connect(ChannelRouter(1)).out(1).connect(outputMidi);
     inputMidi1.out(0).connect(Transpose(48)).out(0).connect(MidiUtil.debugMidi).out(0).connect(outputMidi)
 
   }

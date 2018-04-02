@@ -32,7 +32,7 @@ object Keytar1 extends App {
 
     chordTransformer.setBaseChord(new Chord("E min"))
 
-    val instrumentSelector = new MidiFunction((message: Option[MidiMessage], timeStamp: Long) => {
+    val instrumentSelector = MidiNode((message: Option[MidiMessage], timeStamp: Long) => {
 
       val baseInstrument = IndexedSeq(26, 30, 5, 7)
       val soloInstrument = IndexedSeq(26, 29, 10, 40)
@@ -57,7 +57,7 @@ object Keytar1 extends App {
 
     midiInNanoPad.out(0).connect(instrumentSelector)
 
-    midiInNanoKey.out(0).connect(new Router(2)).out(2).connect(keytar)
+    midiInNanoKey.out(0).connect(keytar.in(2))
 
     instrumentSelector.out(0)
       .connect(chordAnalyzer).out(0)

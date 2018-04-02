@@ -16,12 +16,19 @@ object MidiNode {
   //    }
   //  }
 
+  def apply(func: (Option[MidiMessage], Long) => List[(Option[MidiMessage], Long)]) = {
+    new MidiNode() {
+      override def processMessage(message: Option[MidiMessage], timestamp: Long): List[(Option[MidiMessage], Long)] = {
+        func(message, timestamp)
+      }
+    }
+  }
 
-  def apply(x: Transmitter) = {
+  def apply(transmitter: Transmitter) = {
 
     val midiNode = new MidiNode() {}
 
-    x.setReceiver(new Receiver {
+    transmitter.setReceiver(new Receiver {
 
       override def send(message: MidiMessage, timeStamp: Long): Unit = {
         try {
@@ -38,11 +45,11 @@ object MidiNode {
     midiNode
   }
 
-  def apply(x: Receiver) = {
+  def apply(receiver: Receiver) = {
 
     val midiNode = new MidiNode {
       override def receive(message: Option[MidiMessage], timeStamp: Long): Unit = {
-        message foreach { m => x.send(m, timeStamp) }
+        message foreach { m => receiver.send(m, timeStamp) }
         //this.send(message, timeStamp)
       }
     }
@@ -56,56 +63,29 @@ trait MidiNode {
   val OUT_2 = 2
 
   val BROADCAST_CHANNEL: Int = 100
-  private var channels = Map[Int, MidiChannel]()
+  private var nodes = Set[MidiNode]()
 
-  case class MidiChannel(val channel: Int) {
-
-    var midiNodes: Set[MidiNode] = Set.empty
-
-    def connect(node: MidiNode): MidiNode = {
-      midiNodes = midiNodes + node
-      node
-    }
-
-    def send(message: Option[MidiMessage], timeStamp: Long): Unit = {
-      midiNodes foreach (_.receive(message, timeStamp))
-    }
+  def connect(node: MidiNode): MidiNode = {
+    nodes = nodes + node
+    node
   }
 
-  def out(channel: Int): MidiChannel = channels.get(channel) match {
-    case Some(midiChannel) => midiChannel
-    case None => {
-      val midiChannel = MidiChannel(channel)
-      channels = channels + (channel -> midiChannel)
-      midiChannel
-    }
+  def processMessage(message: Option[MidiMessage], timeStamp: Long): List[(Option[MidiMessage], Long)] = {
+      return List((message, timeStamp))
   }
+
+  def in(channel: Int): MidiNode = ChannelRouter(channel).connect(this)
+
+  def out(channel: Int): MidiNode = this.connect(ChannelFilter(channel))
 
   def receive(message: Option[MidiMessage], timeStamp: Long): Unit = {
-    send(message, timeStamp)
+    processMessage(message, timeStamp).foreach(m => send(m._1, m._2))
   }
 
   final def send(message: Option[MidiMessage], timeStamp: Long): Unit = {
-
-    message match {
-      case Some(m: ShortMessage) => {
-
-        out(m.getChannel).send(message, timeStamp)
-        //getChannel(BROADCAST_CHANNEL).send(message, timeStamp)
-
-      }
-
-      case Some(m: MetaMessage) =>
-          out(0).send(message, timeStamp)
-
-
-      case _ => out(BROADCAST_CHANNEL).send(message, timeStamp)
-
-    }
+    nodes.foreach( _.receive(message, timeStamp))
   }
 
-
-  def close(): Unit = {}
+  def close(): Unit = nodes.foreach( _.close())
 
 }
-

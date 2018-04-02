@@ -36,7 +36,7 @@ object Harmonica extends App {
     val harmonica = new Harmonica()
     val chordTransformer = new ChordTransformer()
 
-    val selectInstrument = new MidiFunction((message: Option[MidiMessage], timeStamp: Long) => {
+    val selectInstrument = MidiNode((message: Option[MidiMessage], timeStamp: Long) => {
 
       val baseInstrument = IndexedSeq(26, 30, 5, 7)
       val soloInstrument = IndexedSeq(24, 29, 10, 40)

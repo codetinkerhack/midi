@@ -23,6 +23,7 @@ object Extensions {
 
 class ChordAnalyzer extends MidiNode {
 
+
   import Extensions._
 
   private var chordToPlay = new AtomicInteger(0)
@@ -33,75 +34,7 @@ class ChordAnalyzer extends MidiNode {
   private var audibleKeysCombo: Int = _
   private var executor: ExecutorService = Executors.newFixedThreadPool(1)
 
-  //  @BeanProperty
-  //  var chordTransformer: ChordTransformer = _
 
-
-  /*
-  // G
-  addToChordMap(0b1, Note_G, Note_B, Note_D1);
-
-  // F
-  addToChordMap(0b10, Note_F, Note_A, Note_C1);
-
-  // Fm
-    addToChordMap(0b11, Note_F, Note_Gx, Note_C1);
-
-
-  // C
-  addToChordMap(0b100, Note_C1, Note_E, Note_G);
-
-  // Cm
-     addToChordMap(0b101, Note_C1, Note_Dx, Note_G);
-
-  // C7
-    addToChordMap(0b111, Note_C, Note_E, Note_G, Note_Ax);
-
-
-  // Am
-  addToChordMap(0b1000, Note_A, Note_C1, Note_E);
-
-  // Dm
-  addToChordMap(0b10000, Note_D1, Note_F, Note_A);
-
-  // Em
-  addToChordMap(0b100000, Note_E, Note_G, Note_B);
-
-  // E
-    addToChordMap(0b101000, Note_E, Note_Gx, Note_B);
-
-
-  // D
-  addToChordMap(0b10100, Note_D1, Note_Fx, Note_A);
-
-
-  // Bb
-  addToChordMap(0b1000000, Note_Ax, Note_D, Note_F);
-
-  // A
-  addToChordMap(0b1010, Note_A, Note_Cx, Note_E);
-
-
-
-  // B7
-  addToChordMap(0b10000000, Note_B, Note_Dx, Note_Fx, Note_A);
-
-
-  // D7
-  addToChordMap(0b100000000, Note_D1, Note_Fx, Note_A, Note_C);
-
-
-  // E7
-  addToChordMap(0b1000000000, Note_E, Note_Gx, Note_B, Note_D1);
-
-
-
-  // G7
-  addToChordMap(0b10000000000, Note_G, Note_B, Note_D1, Note_F);
-
-  // A7
-  addToChordMap(0b100000000000, Note_A, Note_C, Note_E, Note_G);
-*/
   // Stradella
 
   //F

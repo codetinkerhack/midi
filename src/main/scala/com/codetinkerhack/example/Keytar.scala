@@ -35,7 +35,7 @@ object Keytar extends App {
 
     chordTransformer.setBaseChord(new Chord("E min"))
 
-    val instrumentSelector = new MidiFunction((message: Option[MidiMessage], timeStamp: Long) => {
+    val instrumentSelector = MidiNode((message: Option[MidiMessage], timeStamp: Long) => {
 
       val baseInstrument = IndexedSeq(26, 30, 5, 7)
       val soloInstrument = IndexedSeq(24, 29, 10, 40)
@@ -60,24 +60,7 @@ object Keytar extends App {
     // Scalalika
     midiInNanoPad.out(0).connect(instrumentSelector)
 
-    midiInNanoKey.out(0).connect(new MidiFunction (
-
-      (message, timeStamp) => {
-        message match {
-          case Some(m: ShortMessage) => {
-
-
-            var messageList: List[(Option[ShortMessage], Long)] = List()
-
-            messageList = (Some(new ShortMessage(m.getCommand, 2, m.getData1, m.getData2)), 0l) :: messageList
-
-            messageList
-          }
-          case _ => List((None, timeStamp))
-        }
-      }
-
-    )).out(2).connect(keytar)
+    midiInNanoKey.out(0).connect(keytar.in(2))
 
     instrumentSelector.out(0)
       .connect(chordAnalyzer).out(0)

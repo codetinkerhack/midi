@@ -7,7 +7,7 @@ import javax.sound.midi.{MetaMessage, ShortMessage}
   */
 object MidiUtil {
 
-  val debugMidi = new MidiFunction((message, timeStamp) => {
+  val debugMidi = MidiNode((message, timeStamp) => {
 
     import ShortMessage._
 
