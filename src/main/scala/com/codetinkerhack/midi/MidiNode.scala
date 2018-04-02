@@ -70,9 +70,7 @@ trait MidiNode {
     node
   }
 
-  def processMessage(message: Option[MidiMessage], timeStamp: Long): List[(Option[MidiMessage], Long)] = {
-      return List((message, timeStamp))
-  }
+  def processMessage(message: Option[MidiMessage], timeStamp: Long): List[(Option[MidiMessage], Long)] = List((message, timeStamp))
 
   def in(channel: Int): MidiNode = ChannelRouter(channel).connect(this)
 
