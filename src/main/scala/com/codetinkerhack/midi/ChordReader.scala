@@ -21,7 +21,7 @@ object Extensions {
 }
 
 
-class ChordAnalyzer extends MidiNode {
+class ChordReader extends MidiNode {
 
 
   import Extensions._

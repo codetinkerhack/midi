@@ -21,10 +21,10 @@ object Keytar1 extends App {
     inputNanoPad.open()
     inputNanoKey.open()
 
-    val chordAnalyzer = new ChordAnalyzer()
+    val chordAnalyzer = new ChordReader()
     val midiDelay = new MidiDelay()
     val keytar = new Keytar1()
-    val chordTransformer = new ChordTransformer()
+    val chordTransformer = new ChordModifier()
     val midiOut = MidiNode(output.getReceiver)
     val midiInNanoPad = MidiNode(inputNanoPad.getTransmitters.get(0))
 

@@ -28,33 +28,31 @@ object Scalalaika extends App {
 
     //input1.open()
 
-    val chordAnalyzer = new ChordAnalyzer()
-    val dummyReceiver = new DummyReceiver()
+    val chordReader = new ChordReader()
+    val noopNode = new NoopNode()
     val midiDelay = new MidiDelay()
     val scalaLika = getScalalaika()
-    val chordTransformer = new ChordTransformer()
+    val chordModifier = new ChordModifier()
     val midiOut = MidiNode(output.getReceiver)
-    val midiInNanoPad = MidiNode(inputNanoPad.getTransmitters.get(0))
+    val midiNanoPad = MidiNode(inputNanoPad.getTransmitters.get(0))
 
-    chordTransformer.setBaseChord(new Chord("E min"))
+    chordModifier.setBaseChord(new Chord("E min"))
 
 
     val instrumentSelector = Scalalaika.getInstrumentSelector()
 
-    // Scalalika
-    midiInNanoPad.out(0).connect(instrumentSelector)
+    midiNanoPad.out(0).connect(instrumentSelector)
 
     instrumentSelector.out(0)
-      .connect(chordAnalyzer).out(0)
+      .connect(chordReader).out(0)
       .connect(scalaLika).out(0)
-      .connect(chordTransformer).out(0)
-    //.connect(midiOut)
+      .connect(chordModifier).out(0)
 
     instrumentSelector.out(1).connect(midiOut)
     instrumentSelector.out(2).connect(midiOut)
 
-    scalaLika.out(1).connect(midiDelay).out(1).connect(chordTransformer).out(1).connect(midiOut)
-    scalaLika.out(2).connect(chordTransformer).out(2).connect(midiOut)
+    scalaLika.out(1).connect(midiDelay).out(1).connect(chordModifier).out(1).connect(midiOut)
+    scalaLika.out(2).connect(chordModifier).out(2).connect(midiOut)
 
   }
 
@@ -124,7 +122,7 @@ object Scalalaika extends App {
           //println("Control change y: " + ccy)
 
           currentBaseNote match {
-            case Some(m: ShortMessage) => {
+            case Some(m1: ShortMessage) => {
               val note = baseNote + scale((128 - ccy) / 25)
 
 

@@ -5,7 +5,7 @@ import javax.sound.midi._
 
 import scala.collection.JavaConversions._
 
-class ChordTransformer extends MidiNode {
+class ChordModifier extends MidiNode {
 
   def setBaseChord(c: Chord) {
     baseChord = c

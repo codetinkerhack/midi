@@ -30,11 +30,11 @@ object Harmonica extends App {
     // import ExtendedReceiver._
 
 
-    val chordAnalyzer = new ChordAnalyzer()
-    val dummyReceiver = new DummyReceiver()
+    val chordAnalyzer = new ChordReader()
+    val dummyReceiver = new NoopNode()
     // val midiDelay = new MidiDelay()
     val harmonica = new Harmonica()
-    val chordTransformer = new ChordTransformer()
+    val chordTransformer = new ChordModifier()
 
     val selectInstrument = MidiNode((message: Option[MidiMessage], timeStamp: Long) => {
 

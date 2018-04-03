@@ -5,7 +5,7 @@ import javax.sound.midi.{MidiMessage, ShortMessage}
 /**
   * Created by Evgeniy on 30/08/2016.
   */
-case class Transpose(i: Int)  extends MidiNode {
+case class Transposer(i: Int)  extends MidiNode {
 
   override def receive(message: Option[MidiMessage], timeStamp: Long): Unit = {
     message match {
