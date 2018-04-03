@@ -61,7 +61,11 @@ Possible connection could be:
 Description of the above example:
 
 MidiInput is usually a midi device e.g. keyboard or could be several different midi inputs from different keyboards e.g. MidiInput1, 2, 3
+
 MidiOutput is usually a midi sound module
+
+MidiInput and MidiOutput are created by adapting common midi receiver / transmitter to MidiNode (check out examples use of MidiHandler and MidiNode constructors)
+
 
     Connected MidiInput device channel 0 to node A
 
@@ -76,10 +80,10 @@ MidiOutput is usually a midi sound module
      output from node C channel 0 will be delivered to node E
     
     Midi messages passed through D
-     output from node D channel 1 will be delivered to node Output
+     output from node D channel 1 will be delivered to MidiOutput
     
     Midi messages passed through E
-     output from node E channel 0 will be delivered to node Output
+     output from node E channel 0 will be delivered to MidiOutput
 
 There is also implementation of various non standard Midi inputs TCP / UDP / COM port based: com.codetinkerhack.midi.server
 That allow building custom Midi components using electronics like arduino.
