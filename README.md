@@ -63,24 +63,23 @@ Description of the above example:
 MidiInput is usually a midi device e.g. keyboard or could be several different midi inputs from different keyboards e.g. MidiInput1, 2, 3
 MidiOutput is usually a midi sound module
 
-Connected Input device output 0 to node A
+    Connected MidiInput device channel 0 to node A
 
-Midi messages passed through A 
- that was output from node A channel 0 will be delivered to node B channel 0 and node C channel 1
- that was output from node A channel 1 will be delivered to node D
-
-Midi messages passed through B
- that was output from node B channel 0 will be delivered to node E
-
-Midi messages passed through C
- that was output from node C channel 0 will be delivered to node E
-
-Midi messages passed through D
- that was output from node D channel 1 will be delivered to node Output
-
-Midi messages passed through E
- that was output from node E channel 0 will be delivered to node Output
-
+    Midi messages passed through A 
+     output from node A channel 0 will be delivered to node B channel 0 and node C channel 1
+     output from node A channel 1 will be delivered to node D
+    
+    Midi messages passed through B
+     output from node B channel 0 will be delivered to node E
+    
+    Midi messages passed through C
+     output from node C channel 0 will be delivered to node E
+    
+    Midi messages passed through D
+     output from node D channel 1 will be delivered to node Output
+    
+    Midi messages passed through E
+     output from node E channel 0 will be delivered to node Output
 
 There is also implementation of various non standard Midi inputs TCP / UDP / COM port based: com.codetinkerhack.midi.server
 That allow building custom Midi components using electronics like arduino.
