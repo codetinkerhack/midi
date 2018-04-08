@@ -19,7 +19,7 @@ object Scalalaika extends App {
 
     val mh = new MidiHandler()
     val output = mh.getReceivers.get("midiout")
-    val inputNanoPad = mh.getTransmitters.get("nanoPAD2")
+    val inputNanoPad = mh.getTransmitters.get("PAD")
 
 
     output.open()
@@ -110,8 +110,9 @@ object Scalalaika extends App {
         case Some(message: ShortMessage) if (message.getCommand == NOTE_OFF) => {
           val baseNoteOff = (currentBaseNote.map(n => new ShortMessage(NOTE_OFF, 1, n.getData1, 0)), 0L)
 
-          val notesOff = notesOnCache.seq.map(n => (Some(new ShortMessage(NOTE_OFF, 2, n, 0)), 0l))
+          val notesOff = notesOnCache.map(n => (Some(new ShortMessage(NOTE_OFF, 2, n, 0)), 0l))
           notesOnCache = Set.empty
+          currentBaseNote = None
 
           baseNoteOff :: notesOff.toList
         }
@@ -119,31 +120,34 @@ object Scalalaika extends App {
         case Some(message: ShortMessage) if (message.getCommand == CONTROL_CHANGE && message.getData1 == 2) => {
           val ccy = message.getData2
 
-          //println("Control change y: " + ccy)
-
           currentBaseNote match {
+
             case Some(m1: ShortMessage) => {
-              val note = baseNote + scale((128 - ccy) / 25)
 
+//              println("Control change y: " + ccy)
 
-              if (!notesOnCache(note) || (notesOnCache(note) && (currentTimeMillis() - timeLapsed) > 500)) {
+              val note = baseNote + scale((128 - ccy) / 32)
+
+              var noteList = List.empty[(Some[ShortMessage], Long)]
+
+              if (!notesOnCache(note) || (notesOnCache(note) && (currentTimeMillis() - timeLapsed) > 50)) {
 
                 var notesOff = Set[(Some[ShortMessage], Long)]()
                 if (currentTimeMillis() - timeLapsed > 100) {
-                  notesOff = notesOnCache.seq.map(n => (Some(new ShortMessage(NOTE_OFF, 2, n, 0)), 0l))
+                  notesOff = notesOnCache.map(n => (Some(new ShortMessage(NOTE_OFF, 2, n, 0)), 0l))
 
                   notesOnCache = Set.empty
-                  return notesOff.toList
+                  noteList = noteList ::: notesOff.toList
                 }
 
                 timeLapsed = currentTimeMillis()
 
                 notesOnCache = notesOnCache + note
 
-                return List((Some(new ShortMessage(NOTE_ON, 2, note, 64)), 0l))
+                noteList = noteList ::: List((Some(new ShortMessage(NOTE_ON, 2, note, 64)), 0l))
               }
 
-              List((None, 0l))
+              noteList
             }
 
             case _ => List((None, 0l))
