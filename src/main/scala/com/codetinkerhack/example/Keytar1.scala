@@ -13,7 +13,7 @@ object Keytar1 extends App {
   override def main(args: Array[String]) {
 
     val mh = new MidiHandler()
-    val output = mh.getReceivers.get("loopMIDI Port")
+    val output = mh.getReceivers.get("loopback")
     val inputNanoPad = mh.getTransmitters.get("nanoPAD2")
     val inputNanoKey = mh.getTransmitters.get("nanoKEY2")
 
@@ -54,7 +54,7 @@ object Keytar1 extends App {
       }
     })
 
-
+    // Scalalika
     midiInNanoPad.out(0).connect(instrumentSelector)
 
     midiInNanoKey.out(0).connect(keytar.in(2))

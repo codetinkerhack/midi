@@ -18,7 +18,7 @@ object Evotar extends App {
       SerialPort.STOPBITS_1,
       SerialPort.PARITY_NONE)
 
-    val output = mh.getReceivers.get("loopMIDI Port")
+    val output = mh.getReceivers.get("loopback")
 
     output.open()
 

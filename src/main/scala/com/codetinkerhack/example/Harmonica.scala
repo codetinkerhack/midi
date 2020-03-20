@@ -19,15 +19,12 @@ object Harmonica extends App {
 
 
     val mh = new MidiHandler()
-    val output = mh.getReceivers.get("loopMIDI Port")
+    val output = mh.getReceivers.get("loopback")
     // val input = mh.getTransmitters.get("nanoPAD2")
     val input1 = mh.getTransmitters.get("APC Key 25")
 
     output.open()
     input1.open()
-
-
-    // import ExtendedReceiver._
 
 
     val chordAnalyzer = new ChordReader()

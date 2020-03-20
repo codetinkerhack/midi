@@ -18,15 +18,12 @@ object Scalalaika extends App {
 
 
     val mh = new MidiHandler()
-    val output = mh.getReceivers.get("midiout")
-    val inputNanoPad = mh.getTransmitters.get("PAD")
+    val output = mh.getReceivers.get("loopback")
+    val inputNanoPad = mh.getTransmitters.get("nanoPAD2")
 
 
     output.open()
     inputNanoPad.open()
-
-
-    //input1.open()
 
     val chordReader = new ChordReader()
     val noopNode = new NoopNode()

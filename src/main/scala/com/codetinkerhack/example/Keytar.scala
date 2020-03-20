@@ -11,12 +11,10 @@ import com.codetinkerhack.midi._
   */
 object Keytar extends App {
 
-
   override def main(args: Array[String]) {
 
-
     val mh = new MidiHandler()
-    val output = mh.getReceivers.get("loopMIDI Port")
+    val output = mh.getReceivers.get("loopback")
     val inputNanoPad = mh.getTransmitters.get("nanoPAD2")
     val inputNanoKey = mh.getTransmitters.get("nanoKEY2")
 
@@ -66,7 +64,6 @@ object Keytar extends App {
       .connect(chordAnalyzer).out(0)
       .connect(keytar).out(0)
       .connect(chordTransformer).out(0)
-      //.connect(midiOut)
 
     instrumentSelector.out(1).connect(midiOut)
     instrumentSelector.out(2).connect(midiOut)
@@ -74,7 +71,6 @@ object Keytar extends App {
     keytar.out(1).connect(midiDelay).out(1).connect(chordTransformer).out(1).connect(midiOut)
     keytar.out(2).connect(chordTransformer).out(2).connect(midiOut)
   }
-
 }
 
 class Keytar() extends MidiNode {
@@ -82,17 +78,14 @@ class Keytar() extends MidiNode {
 
   //    Emin
   //    4, 11, 16, 19, 23, 36
-
   private val baseNote = 40
 
   private val blackNotes = Array[Int](0, 7, 0 , 12, 0 , 0 , 21, 0 , 24, 0 )
   private val whiteNotes = Array[Int](4, 0, 11, 0 , 16, 19, 0 , 23, 0 , 28)
   private val scale = (blackNotes zip whiteNotes).map( x=> x._1 + x._2)
 
-  private var prevNoteOff: Option[ShortMessage] = None
   private var currentBaseNote: Option[ShortMessage] = None
 
-  private var prevNote = -1
   private var timeLapsed: Long = 0;
   private var notesOnCache = Set[Int]()
 
@@ -107,15 +100,12 @@ class Keytar() extends MidiNode {
 
         val note = baseNote + scale(0) - 12
         currentBaseNote = Some(new ShortMessage(NOTE_ON, 1, note, 64))
-
-
         send(Some(new ShortMessage(PITCH_BEND, 1, 0, 0)), 0)
         send(currentBaseNote, 60)
       }
 
       case Some(message: ShortMessage) if (message.getCommand == NOTE_OFF && message.getChannel == 0) => {
         currentBaseNote foreach (n => send(Some(new ShortMessage(NOTE_OFF, 1, n.getMessage()(1), 0)), 0))
-
         notesOnCache.seq foreach (n => send(Some(new ShortMessage(NOTE_OFF, 2, n, 0)), 0))
         notesOnCache = Set.empty
       }
@@ -144,20 +134,16 @@ class Keytar() extends MidiNode {
               notesOnCache = notesOnCache + note
 
             }
-
           }
           case _ =>
         }
       }
+
       case Some(message: ShortMessage) if (message.getCommand == CONTROL_CHANGE && message.getData1 == 1) => {
         //println("Control change x: " + x.getData2);
         send(Some(new ShortMessage(PITCH_BEND, 2, 0, message.getData2 / 8)), 0)
       }
 
-      //      case Some(message: MetaMessage) => {
-      //
-      //        receiver.send(Some(message), timeStamp)
-      //      }
       case _ => {
 
         send(message, timeStamp)

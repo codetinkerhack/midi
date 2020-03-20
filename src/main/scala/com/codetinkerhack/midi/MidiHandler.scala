@@ -5,8 +5,6 @@ import javax.sound.midi._
 
 import scala.beans.BeanProperty
 
-//remove if not needed
-
 class MidiHandler {
 
   @BeanProperty

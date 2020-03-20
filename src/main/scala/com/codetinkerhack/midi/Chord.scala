@@ -27,7 +27,7 @@ object Chord {
   private val Note_C1x = "C1#"
   private val Note_D1 = "D1"
   private val Note_D1x = "D1#"
-  private val Note_E1 = "E"
+  private val Note_E1 = "E1"
 
   progressionMap.put("min", Array(0, 2, 3, 5, 7, 9, 12))
   progressionMap.put("maj", Array(0, 2, 4, 5, 7, 9, 12))

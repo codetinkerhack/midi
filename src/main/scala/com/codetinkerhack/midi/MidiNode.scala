@@ -9,13 +9,6 @@ import scala.collection.immutable._
   */
 object MidiNode {
 
-  //  implicit class ExtendedReceiver (x:Transmitter) {
-  //    def +> [T <: ReceiverTransmitter](y:T): T  = {
-  //      x.setReceiver(y)
-  //      y
-  //    }
-  //  }
-
   def apply(func: (Option[MidiMessage], Long) => List[(Option[MidiMessage], Long)]) = {
     new MidiNode() {
       override def processMessage(message: Option[MidiMessage], timestamp: Long): List[(Option[MidiMessage], Long)] = {
@@ -50,7 +43,6 @@ object MidiNode {
     val midiNode = new MidiNode {
       override def receive(message: Option[MidiMessage], timeStamp: Long): Unit = {
         message foreach { m => receiver.send(m, timeStamp) }
-        //this.send(message, timeStamp)
       }
     }
 
