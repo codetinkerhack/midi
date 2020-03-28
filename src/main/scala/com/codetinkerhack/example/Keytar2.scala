@@ -1,7 +1,5 @@
 package com.codetinkerhack.example
 
-import java.io.File
-
 import javax.sound.midi._
 import com.codetinkerhack.midi._
 import javax.sound.midi.ShortMessage._
@@ -39,7 +37,7 @@ object Keytar2 extends App {
           // println(s"Note: ${m.getData1} index: ${(m.getData1 - 36)/16} base: ${baseInstrument((m.getData1 - 36)/16)} solo: ${soloInstrument((m.getData1 - 36)/16)}")
           var messageList = List[(Option[ShortMessage], Long)]()
 
-          val note = scale(39 - m.getData1) + 47
+          val note = scale(39 - m.getData1) + 35
 
           messageList = (Some(new ShortMessage(m.getCommand, m.getChannel,  note, m.getData2-10)), 0l) :: messageList
 
@@ -59,6 +57,10 @@ object Keytar2 extends App {
 
     pianoKeysNode
       .out(0).connect(ChannelRouter(1))
+      .out(1).connect(MidiFilter( {
+      case Some(m: ShortMessage) if m.getCommand != ShortMessage.PITCH_BEND || m.getCommand != ShortMessage.CONTROL_CHANGE => true
+      case _ => false
+    }))
       .out(1).connect(MidiUtil.debugMidi)
       .out(1).connect(outputMidi);
 
