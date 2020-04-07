@@ -39,7 +39,7 @@ object Keytar2 extends App {
 
           val note = scale(39 - m.getData1) + 35
 
-          messageList = (Some(new ShortMessage(m.getCommand, m.getChannel,  note, m.getData2-10)), 0l) :: messageList
+          messageList = (Some(new ShortMessage(m.getCommand, m.getChannel,  note, m.getData2-64)), 0L) :: messageList
 
           messageList
         }
