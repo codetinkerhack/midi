@@ -1,12 +1,11 @@
 package com.codetinkerhack.example
 
-import java.lang.System._
-import javax.sound.midi._
+import java.lang.System.currentTimeMillis
 
 import com.codetinkerhack.midi._
+import javax.sound.midi.{MidiMessage, ShortMessage}
 
 import scala.collection.immutable.List
-
 
 /**
   * Created by Evgeniy on 31/01/2015.
@@ -19,7 +18,7 @@ object Scalalaika extends App {
 
     val mh = new MidiHandler()
     val output = mh.getReceivers.get("loopback")
-    val inputNanoPad = mh.getTransmitters.get("nanoPAD2")
+    val inputNanoPad = mh.getTransmitters.get("PAD")
 
 
     output.open()
@@ -33,7 +32,7 @@ object Scalalaika extends App {
     val midiOut = MidiNode(output.getReceiver)
     val midiNanoPad = MidiNode(inputNanoPad.getTransmitters.get(0))
 
-    chordModifier.setBaseChord(new Chord("E min"))
+    chordModifier.setBaseChord(new Chord("C 7"))
 
 
     val instrumentSelector = Scalalaika.getInstrumentSelector()
@@ -48,16 +47,16 @@ object Scalalaika extends App {
     instrumentSelector.out(1).connect(midiOut)
     instrumentSelector.out(2).connect(midiOut)
 
-    scalaLika.out(1).connect(midiDelay).out(1).connect(chordModifier).out(1).connect(midiOut)
-    scalaLika.out(2).connect(chordModifier).out(2).connect(midiOut)
+    scalaLika.out(1).connect(midiDelay).out(1).connect(chordModifier).out(1).connect(Transposer(0)).connect(midiOut)
+    scalaLika.out(2).connect(chordModifier).out(2).connect(Transposer(0)).connect(midiOut)
 
   }
 
   def getInstrumentSelector() = MidiNode (
     (message, timeStamp) => {
 
-      val baseInstrument = IndexedSeq(26, 30, 5, 7)
-      val soloInstrument = IndexedSeq(24, 29, 10, 40)
+      val baseInstrument = IndexedSeq(0, 1, 2, 3)
+      val soloInstrument = IndexedSeq(0, 1, 2, 3)
 
       import javax.sound.midi.ShortMessage._
 
@@ -81,9 +80,9 @@ object Scalalaika extends App {
     //    Emin
     //    4, 11, 16, 19, 23, 36
 
-    private val baseNote = 40
+    private val baseNote = 48
 
-    private val scale = Array(4, 11, 16, 19, 23, 28)
+    private val scale = Array(0, 4, 7, 10, 16)
 
     private var currentBaseNote: Option[ShortMessage] = None
 
@@ -101,7 +100,7 @@ object Scalalaika extends App {
           val note = baseNote + scale(0) - 12
           currentBaseNote = Some(new ShortMessage(NOTE_ON, 1, note, 64))
 
-          (currentBaseNote, 60L) :: List((Some(new ShortMessage(PITCH_BEND, 1, 0, 0)), 0L))
+          (currentBaseNote, 60L) :: List.empty //:: List((Some(new ShortMessage(PITCH_BEND, 1, 0, 0)), 0L))
         }
 
         case Some(message: ShortMessage) if (message.getCommand == NOTE_OFF) => {
@@ -152,10 +151,10 @@ object Scalalaika extends App {
 
         }
 
-        case Some(message: ShortMessage) if (message.getCommand == CONTROL_CHANGE && message.getData1 == 1) => {
-          //println("Control change x: " + x.getData2);
-          List((Some(new ShortMessage(PITCH_BEND, 2, 0, message.getData2 / 8)), 0l))
-        }
+//        case Some(message: ShortMessage) if (message.getCommand == CONTROL_CHANGE && message.getData1 == 1) => {
+//          //println("Control change x: " + x.getData2);
+//          List((Some(new ShortMessage(PITCH_BEND, 2, 0, message.getData2 / 8)), 0l))
+//        }
 
         case _ => List((message, timeStamp))
 

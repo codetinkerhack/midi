@@ -1,7 +1,6 @@
 package com.codetinkerhack.example
 
 import javax.sound.midi._
-
 import com.codetinkerhack.midi._
 
 /**

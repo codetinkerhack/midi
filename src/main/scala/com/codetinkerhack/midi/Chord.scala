@@ -37,11 +37,6 @@ object Chord {
   progressionMap.put("7", Array(0, 2, 4, 5, 7, 9, 10))
   progressionMap.put("m7", Array(0, 2, 3, 5, 7, 9, 10))
 
-  noteToInt.put("F#", 6)
-  noteToInt.put("G ", -5)
-  noteToInt.put("G#", -4)
-  noteToInt.put("A ", -3)
-  noteToInt.put("A#", -2)
   noteToInt.put("B ", -1)
   noteToInt.put("C ", 0)
   noteToInt.put("C#", 1)
@@ -49,6 +44,11 @@ object Chord {
   noteToInt.put("D#", 3)
   noteToInt.put("E ", 4)
   noteToInt.put("F ", 5)
+  noteToInt.put("F#", 6)
+  noteToInt.put("G ", 7)
+  noteToInt.put("G#", 8)
+  noteToInt.put("A ", 9)
+  noteToInt.put("A#", 10)
 
   def chordNoteReMap(chordFrom: Chord, chordTo: Chord, note: Int): Int = {
     val offset = chordTo.getChordBaseNote - chordFrom.getChordBaseNote

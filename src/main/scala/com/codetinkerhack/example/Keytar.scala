@@ -1,8 +1,8 @@
 package com.codetinkerhack.example
 
 import java.lang.System._
-import javax.sound.midi._
 
+import javax.sound.midi._
 import com.codetinkerhack.midi._
 
 

@@ -64,6 +64,21 @@ object Keytar2 extends App {
       .out(1).connect(MidiUtil.debugMidi)
       .out(1).connect(outputMidi);
 
+//    val testNode = MidiNode((message: Option[MidiMessage], timeStamp: Long) => {
+//        val list = (0 to 64)
+//          .toList
+//          .map( i => (Some(new ShortMessage(NOTE_ON, 0, 36, i)) , 0L))
+//
+//        list
+//      })
+//
+//
+//    testNode
+//      .connect(MidiUtil.debugMidi)
+//      .connect(chordKeysNode)
+//
+//    testNode.receive(Some(new ShortMessage(NOTE_ON, 1, 0, 127)) , 0L)
+
     chordKeysNode
       .out(0).connect(chordKeysTransform)
       .out(0).connect(ChannelRouter(0))
