@@ -3,7 +3,7 @@ package com.codetinkerhack.example
 import java.lang.System.currentTimeMillis
 
 import com.codetinkerhack.midi._
-import javax.sound.midi.{MidiMessage, ShortMessage}
+import javax.sound.midi.{MetaMessage, MidiMessage, ShortMessage}
 
 import scala.collection.immutable.List
 
@@ -25,7 +25,6 @@ object Scalalaika extends App {
     inputNanoPad.open()
 
     val chordReader = new ChordReader()
-    val noopNode = new NoopNode()
     val midiDelay = new MidiDelay()
     val scalaLika = getScalalaika()
     val chordModifier = new ChordModifier()
@@ -41,11 +40,7 @@ object Scalalaika extends App {
 
     instrumentSelector.out(0)
       .connect(chordReader).out(0)
-      .connect(scalaLika).out(0)
-      .connect(chordModifier).out(0)
-
-    instrumentSelector.out(1).connect(midiOut)
-    instrumentSelector.out(2).connect(midiOut)
+      .connect(scalaLika)
 
     scalaLika.out(1).connect(midiDelay).out(1).connect(chordModifier).out(1).connect(Transposer(0)).connect(midiOut)
     scalaLika.out(2).connect(chordModifier).out(2).connect(Transposer(0)).connect(midiOut)
@@ -84,7 +79,7 @@ object Scalalaika extends App {
 
     private val scale = Array(0, 4, 7, 10, 16)
 
-    private var currentBaseNote: Option[ShortMessage] = None
+    private var currentChord: Chord = null
 
     private var timeLapsed = 0l
     private var notesOnCache = Set[Int]()
@@ -95,66 +90,50 @@ object Scalalaika extends App {
 
       message match {
 
-        case Some(message: ShortMessage) if (message.getCommand == NOTE_ON) => {
+        case Some(m: MetaMessage) => {
+          println(s"Chord received: ${  new String(m.getData()) }")
 
-          val note = baseNote + scale(0) - 12
-          currentBaseNote = Some(new ShortMessage(NOTE_ON, 1, note, 64))
+          val newChord = new Chord(new String(m.getData))
 
-          (currentBaseNote, 60L) :: List.empty //:: List((Some(new ShortMessage(PITCH_BEND, 1, 0, 0)), 0L))
+          if (currentChord != newChord) {
+
+            currentChord = newChord
+
+            val notesOff = notesOnCache.map(n => (Some(new ShortMessage(NOTE_OFF, 2, n, 0)), 0l))
+
+            notesOnCache = Set.empty
+
+            notesOff.toList  ::: ((message, 0L) :: List.empty)
+          } else
+            List((message, timeStamp))
         }
 
-        case Some(message: ShortMessage) if (message.getCommand == NOTE_OFF) => {
-          val baseNoteOff = (currentBaseNote.map(n => new ShortMessage(NOTE_OFF, 1, n.getData1, 0)), 0L)
-
-          val notesOff = notesOnCache.map(n => (Some(new ShortMessage(NOTE_OFF, 2, n, 0)), 0l))
-          notesOnCache = Set.empty
-          currentBaseNote = None
-
-          baseNoteOff :: notesOff.toList
-        }
-
-        case Some(message: ShortMessage) if (message.getCommand == CONTROL_CHANGE && message.getData1 == 2) => {
+        case Some(message: ShortMessage) if (message.getCommand == CONTROL_CHANGE && message.getData1 == 2 && currentChord != null) => {
           val ccy = message.getData2
 
-          currentBaseNote match {
+          val note = baseNote + scale((128 - ccy) / 26)
 
-            case Some(m1: ShortMessage) => {
+          var noteList = List.empty[(Some[ShortMessage], Long)]
 
-//              println("Control change y: " + ccy)
+          if (!notesOnCache(note) || (notesOnCache(note) && (currentTimeMillis() - timeLapsed) > 50)) {
 
-              val note = baseNote + scale((128 - ccy) / 32)
+            var notesOff = Set[(Some[ShortMessage], Long)]()
+            if (currentTimeMillis() - timeLapsed > 100) {
+              notesOff = notesOnCache.map(n => (Some(new ShortMessage(NOTE_OFF, 2, n, 0)), 0l))
 
-              var noteList = List.empty[(Some[ShortMessage], Long)]
-
-              if (!notesOnCache(note) || (notesOnCache(note) && (currentTimeMillis() - timeLapsed) > 50)) {
-
-                var notesOff = Set[(Some[ShortMessage], Long)]()
-                if (currentTimeMillis() - timeLapsed > 100) {
-                  notesOff = notesOnCache.map(n => (Some(new ShortMessage(NOTE_OFF, 2, n, 0)), 0l))
-
-                  notesOnCache = Set.empty
-                  noteList = noteList ::: notesOff.toList
-                }
-
-                timeLapsed = currentTimeMillis()
-
-                notesOnCache = notesOnCache + note
-
-                noteList = noteList ::: List((Some(new ShortMessage(NOTE_ON, 2, note, 64)), 0l))
-              }
-
-              noteList
+              notesOnCache = Set.empty
+              noteList = noteList ::: notesOff.toList
             }
 
-            case _ => List((None, 0l))
+            timeLapsed = currentTimeMillis()
+
+            notesOnCache = notesOnCache + note
+
+            noteList = noteList ::: List((Some(new ShortMessage(NOTE_ON, 2, note, 64)), 10l))
           }
 
+          noteList
         }
-
-//        case Some(message: ShortMessage) if (message.getCommand == CONTROL_CHANGE && message.getData1 == 1) => {
-//          //println("Control change x: " + x.getData2);
-//          List((Some(new ShortMessage(PITCH_BEND, 2, 0, message.getData2 / 8)), 0l))
-//        }
 
         case _ => List((message, timeStamp))
 

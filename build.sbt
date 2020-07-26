@@ -1,8 +1,8 @@
 lazy val root = (project in file("."))
   .settings(
-    name := "MIDI",
+    name := "scala-midi",
     organization := "com.codetinkerhack",
-    scalaVersion := "2.12.10",
+    scalaVersion := "2.12.7",
     version      := "0.1.0-SNAPSHOT",
     libraryDependencies += "org.scalactic" %% "scalactic" % "3.0.4",
     libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.4" % "test",
