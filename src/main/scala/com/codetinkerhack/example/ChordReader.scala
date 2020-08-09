@@ -211,7 +211,7 @@ class ChordReader extends MidiNode {
 
     override def run() {
       try {
-        Thread.sleep(50) // We need to delay playing chord to allow sufficient time to press all the chord keysss
+        Thread.sleep(10) // We need to delay playing chord to allow sufficient time to press all the chord keysss
       } catch {
         case e: InterruptedException => e.printStackTrace()
       }

@@ -129,18 +129,19 @@ object Scalalaika extends App {
 
             notesOnCache = notesOnCache + note
 
-            noteList = noteList ::: List((Some(new ShortMessage(NOTE_ON, 2, note, 64)), 10l))
+            noteList = noteList ::: List((Some(new ShortMessage(NOTE_ON, 2, note, 64)), 20l))
           }
 
           noteList
         }
+        case Some(message: ShortMessage) if (message.getCommand == CONTROL_CHANGE && message.getData1 == 1) => {
+          //println("Control change x: " + x.getData2);
+          List((Some(new ShortMessage(PITCH_BEND, 2, 0, message.getData2 / 4 )), 0l))
+        }
 
         case _ => List((message, timeStamp))
-
       }
 
     }
-
   }
-
 }
