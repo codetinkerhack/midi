@@ -11,7 +11,7 @@ class ChordModifier extends MidiNode {
     baseChord = c
   }
 
-  private var baseChord = new Chord("C maj")
+  private var baseChord = new Chord("C 7")
 
   private var currentChord = new Chord("C 7")
 
