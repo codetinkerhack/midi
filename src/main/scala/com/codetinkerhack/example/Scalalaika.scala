@@ -158,7 +158,7 @@ object Scalalaika extends App {
     chordReader.addToChordMap("10001".b, new Chord("F 7"))
     // Fm7
     chordReader.addToChordMap("10101".b, new Chord("F m7"))
-    // F#maj7
+    // Fmaj7
     chordReader.addToChordMap("1101".b, new Chord("F maj7"))
 
     // C

@@ -2,7 +2,7 @@ package com.codetinkerhack.midi
 
 import java.util._
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.{ExecutorService, Executors}
+import java.util.concurrent.{ExecutorService, Executors, Future}
 
 import javax.sound.midi._
 
@@ -17,6 +17,7 @@ class ChordReader extends MidiNode {
   private var keysCombo: Int = _
   private var audibleKeysCombo: Int = _
   private val executor: ExecutorService = Executors.newFixedThreadPool(1)
+  private var chordScheduled: Future[_] = _
 
   override def receive(message: Option[MidiMessage], timeStamp: Long) {
 
@@ -60,8 +61,12 @@ class ChordReader extends MidiNode {
 
   private def chordOn(keysCombo: Int) {
     if (chordMap.containsKey(keysCombo)) {
+//      if(chordScheduled  != null)
+//        chordScheduled.cancel(true)
+
       chordToPlay.set(keysCombo)
-      executor.submit(new ChordsPlayer())
+      chordScheduled = executor.submit(new ChordsPlayer())
+
     }
   }
 
@@ -76,7 +81,7 @@ class ChordReader extends MidiNode {
 
     override def run() {
       try {
-        Thread.sleep(10) // We need to delay playing chord to allow sufficient time to press all the chord keysss
+        Thread.sleep(10) // We need to delay playing chord to allow sufficient time to press all the chord keys
       } catch {
         case e: InterruptedException => e.printStackTrace()
       }

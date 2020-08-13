@@ -1,33 +1,13 @@
 package com.codetinkerhack.midi
 
+import java.util
 import java.util.{ArrayList, HashMap, List}
 
 import scala.beans.BeanProperty
 
 object Chord {
-
   val progressionMap = new HashMap[String, Array[Int]]()
   val noteToInt = new HashMap[String, Integer]()
-
-  private var noteToIntMap: HashMap[String, Integer] = new HashMap[String, Integer]()
-  private var intToNoteMap: HashMap[Integer, String] = new HashMap[Integer, String]()
-  private val Note_C = "C"
-  private val Note_Cx = "C#"
-  private val Note_D = "D"
-  private val Note_Dx = "D#"
-  private val Note_E = "E"
-  private val Note_F = "F"
-  private val Note_Fx = "F#"
-  private val Note_G = "G"
-  private val Note_Gx = "G#"
-  private val Note_A = "A"
-  private val Note_Ax = "A#"
-  private val Note_B = "B"
-  private val Note_C1 = "C1"
-  private val Note_C1x = "C1#"
-  private val Note_D1 = "D1"
-  private val Note_D1x = "D1#"
-  private val Note_E1 = "E1"
 
   progressionMap.put("min", Array(0, 2, 3, 5, 7, 9, 12))
   progressionMap.put("maj", Array(0, 2, 4, 5, 7, 9, 12))
@@ -83,8 +63,8 @@ class Chord(val chord: String) {
   @BeanProperty
   val chordVariation = chord.substring(2).trim()
 
-  def getChordNotes(): List[Integer] = {
-    val list = new ArrayList[Integer]()
+  def getChordNotes: util.List[Integer] = {
+    val list = new util.ArrayList[Integer]()
 
     println(s"chordBaseNote: $chordBaseNote chordVariation: '$chordVariation'")
     list.add(chordBaseNote)
