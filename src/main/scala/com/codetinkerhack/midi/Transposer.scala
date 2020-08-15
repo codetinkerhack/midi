@@ -7,10 +7,10 @@ import javax.sound.midi.{MidiMessage, ShortMessage}
   */
 case class Transposer(i: Int)  extends MidiNode {
 
-  override def receive(message: Option[MidiMessage], timeStamp: Long): Unit = {
+  override def receive(message: MidiMessage, timeStamp: Long): Unit = {
     message match {
-      case Some(m: ShortMessage) => {
-        val newMessage = Some(new ShortMessage(m.getCommand, m.getChannel, m.getData1+i, m.getData2))
+      case m: ShortMessage => {
+        val newMessage = new ShortMessage(m.getCommand, m.getChannel, m.getData1+i, m.getData2)
 
         send(newMessage, timeStamp)
       }

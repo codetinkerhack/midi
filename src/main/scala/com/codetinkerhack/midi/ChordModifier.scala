@@ -15,7 +15,7 @@ class ChordModifier extends MidiNode {
 
   private var currentChord = new Chord("C 7")
 
-  private val notesOn = new HashSet[ShortMessage]()
+  private val notesOn = new HashSet[ShortMessage]
 
   private def updateChord(newChord: Chord) {
     notesOn.synchronized {
@@ -40,12 +40,12 @@ class ChordModifier extends MidiNode {
         val offMessage = new ShortMessage(ShortMessage.NOTE_OFF, m.getChannel, Chord.chordNoteReMap(baseChord,
           oldChord, m.getData1), 0)
 
-        send(Some(offMessage), 0)
+        send(offMessage, 0)
 
         val onMessage = new ShortMessage(ShortMessage.NOTE_ON, m.getChannel, Chord.chordNoteReMap(baseChord,
           newChord, m.getData1), m.getData2)
 
-        send(Some(onMessage), 0)
+        send(onMessage, 0)
 
       } catch {
         case ex: Exception => ex.printStackTrace()
@@ -53,16 +53,16 @@ class ChordModifier extends MidiNode {
     }
   }
 
-  override def receive(message: Option[MidiMessage], timeStamp: Long) {
+  override def receive(message: MidiMessage, timeStamp: Long) {
     notesOn.synchronized {
       message match {
-        case Some(m: MetaMessage) => {
+        case m: MetaMessage => {
 
-          println(s"Chord received: ${  new String(m.getData()) }")
+          println(s"Chord received: ${new String(m.getData())}")
 
           updateChord(new Chord(new String(m.getData)))
         }
-        case Some(m: ShortMessage) => {
+        case m: ShortMessage => {
 
           try {
             // woooow whats that??!!?!?
@@ -77,7 +77,7 @@ class ChordModifier extends MidiNode {
               val transposedMessage = new ShortMessage(m.getStatus, Chord.chordNoteReMap(baseChord, currentChord,
                 m.getData1), m.getData2)
 
-              send(Some(transposedMessage), timeStamp)
+              send(transposedMessage, timeStamp)
 
               if (m.getCommand == ShortMessage.NOTE_ON)
                 notesOn.add(new HashMidiMessage(m))
@@ -87,14 +87,14 @@ class ChordModifier extends MidiNode {
               // println(s"Currently on: ${notesOn.size}")
 
             } else if (m.getChannel == 9 || m.getChannel == 8) {
-              send(Some(m), timeStamp)
+              send(m, timeStamp)
             } else if (m.getCommand == ShortMessage.NOTE_ON || m.getCommand == ShortMessage.NOTE_OFF) {
               println(s"Other noteon/off length: ${m.getMessage.length}, NoteOn: ${m.getCommand == ShortMessage.NOTE_ON}, NoteOff: ${m.getCommand == ShortMessage.NOTE_OFF}, ${m.getChannel}, ${m.getData1},  ${m.getData2}, ${timeStamp}")
               //receiver.send(m, timeStamp)
             }
             else if (m.getCommand != ShortMessage.NOTE_ON && m.getCommand != ShortMessage.NOTE_OFF) {
               // println(s"Other non noteon/off length: ${m.getMessage.length}, NoteOn: ${m.getCommand == ShortMessage.NOTE_ON}, NoteOff: ${m.getCommand == ShortMessage.NOTE_OFF}, ${m.getChannel}, ${m.getData1},  ${m.getData2}")
-              send(Some(m), timeStamp)
+              send(m, timeStamp)
             }
           } catch {
             case e: InvalidMidiDataException => e.printStackTrace()

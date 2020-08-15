@@ -8,10 +8,10 @@ import com.codetinkerhack.midi._
   */
 object Harmonica extends App {
 
-  def midiOnToOff(message: Option[ShortMessage]): Option[ShortMessage] = {
+  def midiOnToOff(message: ShortMessage): ShortMessage = {
     import ShortMessage._
 
-    message map (note => (new ShortMessage(NOTE_OFF, 0, note.getData1, 64)))
+    new ShortMessage(NOTE_OFF, 0, message.getData1, 64)
   }
 
   override def main(args: Array[String]) {
@@ -32,7 +32,7 @@ object Harmonica extends App {
     val harmonica = new Harmonica()
     val chordTransformer = new ChordModifier()
 
-    val selectInstrument = MidiNode((message: Option[MidiMessage], timeStamp: Long) => {
+    val selectInstrument = MidiNode((message: MidiMessage, timeStamp: Long) => {
 
       val baseInstrument = IndexedSeq(26, 30, 5, 7)
       val soloInstrument = IndexedSeq(24, 29, 10, 40)
@@ -40,22 +40,22 @@ object Harmonica extends App {
       import javax.sound.midi.ShortMessage._
 
       message match {
-        case Some(m: ShortMessage) if ((m.getCommand == NOTE_OFF || m.getCommand == NOTE_ON) && m.getChannel == 0) => {
+        case m: ShortMessage if ((m.getCommand == NOTE_OFF || m.getCommand == NOTE_ON) && m.getChannel == 0) => {
           // println(s"Note: ${m.getData1} Channel: ${m.getChannel}")
 
-          var messagesList = List[(Option[ShortMessage], Long)]()
+          var messagesList = List[(ShortMessage, Long)]()
 
-          messagesList = (Some(new ShortMessage(PROGRAM_CHANGE, 0, baseInstrument(0), 0)), 0l) :: messagesList
-          messagesList = (Some(new ShortMessage(m.getCommand, 0, m.getData1, 64)), 0l) :: messagesList
+          messagesList = (new ShortMessage(PROGRAM_CHANGE, 0, baseInstrument(0), 0), 0l) :: messagesList
+          messagesList = (new ShortMessage(m.getCommand, 0, m.getData1, 64), 0l) :: messagesList
 
           messagesList
         }
-        case Some(m: ShortMessage) if ((m.getCommand == NOTE_OFF || m.getCommand == NOTE_ON) && m.getChannel == 1) => {
+        case m: ShortMessage if ((m.getCommand == NOTE_OFF || m.getCommand == NOTE_ON) && m.getChannel == 1) => {
 
-          var messagesList = List[(Option[ShortMessage], Long)]()
+          var messagesList = List[(ShortMessage, Long)]()
 
-          messagesList = (Some(new ShortMessage(PROGRAM_CHANGE, 1, soloInstrument(0), 0)), 0l) :: messagesList
-          messagesList = (Some(new ShortMessage(m.getCommand, 1, m.getData1, m.getData2)), 0l) :: messagesList
+          messagesList = (new ShortMessage(PROGRAM_CHANGE, 1, soloInstrument(0), 0), 0l) :: messagesList
+          messagesList = (new ShortMessage(m.getCommand, 1, m.getData1, m.getData2), 0l) :: messagesList
 
           messagesList
         }
@@ -102,32 +102,32 @@ object Harmonica extends App {
     private var notesOnCache = Set[Int]()
 
 
-    override def receive(message: Option[MidiMessage], timeStamp: Long): Unit = {
+    override def receive(message: MidiMessage, timeStamp: Long): Unit = {
       import ShortMessage._
 
       message match {
 
-        case Some(m: MetaMessage) => {
+        case m: MetaMessage => {
 
-          send(midiOnToOff(currentBaseNote), 0)
+          send(midiOnToOff(currentBaseNote.get), 0)
 
           val note = baseNote + 12;
           // + scale(0) - 12
           currentBaseNote = Some(new ShortMessage(NOTE_ON, 0, note, 64))
 
           send(message, 0)
-          send(Some(new ShortMessage(PITCH_BEND, 0, 0, 0)), 0)
-          send(Some(new ShortMessage(PITCH_BEND, 1, 0, 0)), 0)
-          send(currentBaseNote, 0)
+          send(new ShortMessage(PITCH_BEND, 0, 0, 0), 0)
+          send(new ShortMessage(PITCH_BEND, 1, 0, 0), 0)
+          send(currentBaseNote.get, 0)
 
         }
-        case Some(message: ShortMessage) if (message.getCommand == NOTE_OFF && message.getChannel == 0) => {
+        case message: ShortMessage if (message.getCommand == NOTE_OFF && message.getChannel == 0) => {
 
-          send(midiOnToOff(currentBaseNote), 0)
+          send(midiOnToOff(currentBaseNote.get), 0)
 
         }
 
-        case Some(message: ShortMessage) if (message.getCommand == NOTE_ON && message.getChannel == 1) => {
+        case message: ShortMessage if (message.getCommand == NOTE_ON && message.getChannel == 1) => {
           val ccy = message.getData1
 
 
@@ -136,10 +136,10 @@ object Harmonica extends App {
 
           if (!notesOnCache(note)) notesOnCache = notesOnCache + note
 
-          send(Some(new ShortMessage(NOTE_ON, 1, note, message.getData2)), 0)
+          send(new ShortMessage(NOTE_ON, 1, note, message.getData2), 0)
         }
 
-        case Some(message: ShortMessage) if (message.getCommand == NOTE_OFF && message.getChannel == 1) => {
+        case message: ShortMessage if (message.getCommand == NOTE_OFF && message.getChannel == 1) => {
           val ccy = message.getData1
 
           //println("Control change y: " + ccy)
@@ -150,7 +150,7 @@ object Harmonica extends App {
           if (notesOnCache(note)) notesOnCache = notesOnCache - note
 
 
-          send(Some(new ShortMessage(NOTE_OFF, 1, note, 0)), 0)
+          send(new ShortMessage(NOTE_OFF, 1, note, 0), 0)
         }
         //        case Some(message: ShortMessage) if (message.getCommand == CONTROL_CHANGE && message.getData1 == 1) => {
         //          //println("Control change x: " + x.getData2);
@@ -164,7 +164,7 @@ object Harmonica extends App {
 
         // case Some(m:MetaMessage) =>   send(message, timeStamp)
 
-        case Some(m: ShortMessage) if (m.getCommand == PROGRAM_CHANGE) => send(message, timeStamp)
+        case m: ShortMessage if (m.getCommand == PROGRAM_CHANGE) => send(message, timeStamp)
 
         case _ =>
       }

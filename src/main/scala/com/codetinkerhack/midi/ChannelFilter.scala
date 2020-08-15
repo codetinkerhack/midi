@@ -7,13 +7,13 @@ import javax.sound.midi.{MetaMessage, MidiMessage, ShortMessage}
   */
 case class ChannelFilter(channel: Int) extends MidiNode {
 
-  override def receive(message: Option[MidiMessage], timeStamp: Long): Unit = {
+  override def receive(message: MidiMessage, timeStamp: Long): Unit = {
     message match {
-      case Some(m: ShortMessage) if m.getChannel == channel => {
+      case m: ShortMessage if m.getChannel == channel => {
         send(message,timeStamp)
       }
 
-      case Some(m: MetaMessage) =>
+      case m: MetaMessage =>
         send(message, timeStamp)
 
       case _ =>

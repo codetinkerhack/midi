@@ -8,7 +8,7 @@ import javax.sound.midi.MidiMessage
   */
 class NoopNode extends MidiNode {
 
-  override def receive(message: Option[MidiMessage], timeStamp: Long): Unit = {
+  override def receive(message: MidiMessage, timeStamp: Long): Unit = {
     //black hole...
   }
 

@@ -24,7 +24,7 @@ object Keytar2 extends App {
     val pianoKeysNode = MidiNode(pianoKeys.getTransmitters.get(0))
     val chordKeysNode = MidiNode(chordKeys.getTransmitters.get(0))
 
-    val chordKeysTransform = MidiNode((message: Option[MidiMessage], timeStamp: Long) => {
+    val chordKeysTransform = MidiNode((message: MidiMessage, timeStamp: Long) => {
 
       val scale = Array[Int](1, 3, 5, 6,      8, 10, 12, 13,
                                   2, 4, 6, 7,      9, 11, 13, 14,
@@ -33,13 +33,13 @@ object Keytar2 extends App {
                                  10, 12, 14, 15,  17, 19, 21, 22)
 
       message match {
-        case Some(m: ShortMessage) if(m.getCommand == NOTE_OFF || m.getCommand == NOTE_ON) => {
+        case m: ShortMessage if(m.getCommand == NOTE_OFF || m.getCommand == NOTE_ON) => {
           // println(s"Note: ${m.getData1} index: ${(m.getData1 - 36)/16} base: ${baseInstrument((m.getData1 - 36)/16)} solo: ${soloInstrument((m.getData1 - 36)/16)}")
-          var messageList = List[(Option[ShortMessage], Long)]()
+          var messageList = List[(ShortMessage, Long)]()
 
           val note = scale(39 - m.getData1) + 35
 
-          messageList = (Some(new ShortMessage(m.getCommand, m.getChannel,  note, m.getData2-64)), 0L) :: messageList
+          messageList = (new ShortMessage(m.getCommand, m.getChannel,  note, m.getData2-64), 0L) :: messageList
 
           messageList
         }
@@ -49,7 +49,7 @@ object Keytar2 extends App {
 
     MidiSequencer("069_6-8_Stick_01.midi")
       .connect(MidiFilter( {
-        case Some(m: ShortMessage) if m.getCommand == NOTE_OFF || m.getCommand == NOTE_ON => true
+        case m: ShortMessage if m.getCommand == NOTE_OFF || m.getCommand == NOTE_ON => true
         case _ => false
       }))
       .connect(MidiUtil.debugMidi)
@@ -58,16 +58,16 @@ object Keytar2 extends App {
     pianoKeysNode
       .out(0).connect(ChannelRouter(1))
       .out(1).connect(MidiFilter( {
-      case Some(m: ShortMessage) if m.getCommand != ShortMessage.PITCH_BEND || m.getCommand != ShortMessage.CONTROL_CHANGE => true
+      case m: ShortMessage if m.getCommand != ShortMessage.PITCH_BEND || m.getCommand != ShortMessage.CONTROL_CHANGE => true
       case _ => false
     }))
       .out(1).connect(MidiUtil.debugMidi)
       .out(1).connect(outputMidi);
 
-//    val testNode = MidiNode((message: Option[MidiMessage], timeStamp: Long) => {
+//    val testNode = MidiNode((message: MidiMessage, timeStamp: Long) => {
 //        val list = (0 to 64)
 //          .toList
-//          .map( i => (Some(new ShortMessage(NOTE_ON, 0, 36, i)) , 0L))
+//          .map( i => (new ShortMessage(NOTE_ON, 0, 36, i) , 0L))
 //
 //        list
 //      })
@@ -77,7 +77,7 @@ object Keytar2 extends App {
 //      .connect(MidiUtil.debugMidi)
 //      .connect(chordKeysNode)
 //
-//    testNode.receive(Some(new ShortMessage(NOTE_ON, 1, 0, 127)) , 0L)
+//    testNode.receive(new ShortMessage(NOTE_ON, 1, 0, 127) , 0L)
 
     chordKeysNode
       .out(0).connect(chordKeysTransform)

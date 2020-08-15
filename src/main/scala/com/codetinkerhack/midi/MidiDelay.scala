@@ -11,7 +11,7 @@ import scala.collection.immutable.TreeMap
 class MidiDelay() extends MidiNode {
 
 
-  var queue = new TreeMap[Long, Option[MidiMessage]]()
+  var queue = new TreeMap[Long, MidiMessage]()
 
   new Scheduler()
 
@@ -61,7 +61,7 @@ class MidiDelay() extends MidiNode {
 
   }
 
-  override def receive(message: Option[MidiMessage], timeStamp: Long): Unit = {
+  override def receive(message: MidiMessage, timeStamp: Long): Unit = {
 
     if (timeStamp == 0) {
       send(message, 0)

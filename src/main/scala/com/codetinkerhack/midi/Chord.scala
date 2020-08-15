@@ -6,16 +6,16 @@ import java.util.{ArrayList, HashMap, List}
 import scala.beans.BeanProperty
 
 object Chord {
-  val progressionMap = new HashMap[String, Array[Int]]()
+  val scaleMap = new HashMap[String, Array[Int]]()
   val noteToInt = new HashMap[String, Integer]()
 
-  progressionMap.put("min", Array(0, 2, 3, 5, 7, 9, 12))
-  progressionMap.put("maj", Array(0, 2, 4, 5, 7, 9, 12))
-  progressionMap.put("aug", Array(0, 2, 4, 5, 8, 9, 12))
-  progressionMap.put("dim", Array(0, 2, 3, 5, 6, 9, 12))
-  progressionMap.put("maj7", Array(0, 2, 4, 5, 7, 9, 11))
-  progressionMap.put("7", Array(0, 2, 4, 5, 7, 9, 10))
-  progressionMap.put("m7", Array(0, 2, 3, 5, 7, 9, 10))
+  scaleMap.put("min", Array(0, 2, 3, 5, 7, 9, 12))
+  scaleMap.put("maj", Array(0, 2, 4, 5, 7, 9, 12))
+  scaleMap.put("aug", Array(0, 2, 4, 5, 8, 9, 12))
+  scaleMap.put("dim", Array(0, 2, 3, 5, 6, 9, 12))
+  scaleMap.put("maj7", Array(0, 2, 4, 5, 7, 9, 11))
+  scaleMap.put("7", Array(0, 2, 4, 5, 7, 9, 10))
+  scaleMap.put("m7", Array(0, 2, 3, 5, 7, 9, 10))
 
   noteToInt.put("B ", -1)
   noteToInt.put("C ", 0)
@@ -34,15 +34,15 @@ object Chord {
     val offset = chordTo.getChordBaseNote - chordFrom.getChordBaseNote
     val noteNormalized = note % 12
     val octave = Math.floor(note / 12).toInt
-    val progressionNote = getProgressionNote(chordFrom, chordTo, noteNormalized)
-    offset + progressionNote + (12 * octave)
+    val scaleNote = getScaleNote(chordFrom, chordTo, noteNormalized)
+    offset + scaleNote + (12 * octave)
   }
 
-  def getProgressionNote(chordFrom: Chord, chordTo: Chord, note: Int): Int = {
+  def getScaleNote(chordFrom: Chord, chordTo: Chord, note: Int): Int = {
     var i = 0
     while (i <= 6) {
-      if (note == progressionMap.get(chordFrom.chordVariation)(i)) {
-        return progressionMap.get(chordTo.chordVariation)(i)
+      if (note == scaleMap.get(chordFrom.chordType)(i)) {
+        return scaleMap.get(chordTo.chordType)(i)
       }
       i += 1
     }
@@ -61,18 +61,9 @@ class Chord(val chord: String) {
   val chordBaseNote = noteToInt.get(chord.substring(0, 2))
 
   @BeanProperty
-  val chordVariation = chord.substring(2).trim()
+  val chordType = chord.substring(2).trim()
 
-  def getChordNotes: util.List[Integer] = {
-    val list = new util.ArrayList[Integer]()
-
-    println(s"chordBaseNote: $chordBaseNote chordVariation: '$chordVariation'")
-    list.add(chordBaseNote)
-    list.add(chordBaseNote + progressionMap.get(chordVariation)(2))
-    list.add(chordBaseNote + progressionMap.get(chordVariation)(4))
-    list.add(chordBaseNote + progressionMap.get(chordVariation)(6))
-    list
-  }
+  def getScale = scaleMap.get(chordType)
 
   override def toString(): String = chord
 

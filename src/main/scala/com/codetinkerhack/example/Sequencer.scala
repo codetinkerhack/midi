@@ -20,7 +20,7 @@ object Sequencer extends App {
 
     MidiSequencer("069_6-8_Stick_01.midi")
       .connect(MidiFilter( {
-        case Some(m: ShortMessage) if m.getCommand == NOTE_OFF || m.getCommand == NOTE_ON => true
+        case m: ShortMessage if m.getCommand == NOTE_OFF || m.getCommand == NOTE_ON => true
         case _ => false
       }))
       .connect(MidiUtil.debugMidi)

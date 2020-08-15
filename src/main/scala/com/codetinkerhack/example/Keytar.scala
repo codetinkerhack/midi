@@ -33,7 +33,7 @@ object Keytar extends App {
 
     chordTransformer.setBaseChord(new Chord("E min"))
 
-    val instrumentSelector = MidiNode((message: Option[MidiMessage], timeStamp: Long) => {
+    val instrumentSelector = MidiNode((message: MidiMessage, timeStamp: Long) => {
 
       val baseInstrument = IndexedSeq(26, 30, 5, 7)
       val soloInstrument = IndexedSeq(24, 29, 10, 40)
@@ -41,13 +41,13 @@ object Keytar extends App {
       import javax.sound.midi.ShortMessage._
 
       message match {
-        case Some(m: ShortMessage) if (m.getCommand == NOTE_OFF || m.getCommand == NOTE_ON) => {
+        case m: ShortMessage if (m.getCommand == NOTE_OFF || m.getCommand == NOTE_ON) => {
           // println(s"Note: ${m.getData1} index: ${(m.getData1 - 36)/16} base: ${baseInstrument((m.getData1 - 36)/16)} solo: ${soloInstrument((m.getData1 - 36)/16)}")
-          var messageList = List[(Option[ShortMessage], Long)]()
+          var messageList = List[(ShortMessage, Long)]()
 
-          messageList = (Some(new ShortMessage(PROGRAM_CHANGE, 1, baseInstrument((m.getData1 - 36) / 16), 0)), 0l) :: messageList
-          messageList = (Some(new ShortMessage(PROGRAM_CHANGE, 2, soloInstrument((m.getData1 - 36) / 16), 0)), 0l) :: messageList
-          messageList = (Some(new ShortMessage(m.getCommand, m.getChannel, (m.getData1 - 36) % 16, 0)), 0l) :: messageList
+          messageList = (new ShortMessage(PROGRAM_CHANGE, 1, baseInstrument((m.getData1 - 36) / 16), 0), 0l) :: messageList
+          messageList = (new ShortMessage(PROGRAM_CHANGE, 2, soloInstrument((m.getData1 - 36) / 16), 0), 0l) :: messageList
+          messageList = (new ShortMessage(m.getCommand, m.getChannel, (m.getData1 - 36) % 16, 0), 0l) :: messageList
 
           messageList
         }
@@ -90,27 +90,27 @@ class Keytar() extends MidiNode {
   private var notesOnCache = Set[Int]()
 
 
-  override def receive(message: Option[MidiMessage], timeStamp: Long): Unit = {
+  override def receive(message: MidiMessage, timeStamp: Long): Unit = {
     import ShortMessage._
 
     message match {
 
 
-      case Some(message: ShortMessage) if (message.getCommand == NOTE_ON && message.getChannel == 0) => {
+      case message: ShortMessage if (message.getCommand == NOTE_ON && message.getChannel == 0) => {
 
         val note = baseNote + scale(0) - 12
         currentBaseNote = Some(new ShortMessage(NOTE_ON, 1, note, 64))
-        send(Some(new ShortMessage(PITCH_BEND, 1, 0, 0)), 0)
-        send(currentBaseNote, 60)
+        send(new ShortMessage(PITCH_BEND, 1, 0, 0), 0)
+        send(currentBaseNote.get, 60)
       }
 
-      case Some(message: ShortMessage) if (message.getCommand == NOTE_OFF && message.getChannel == 0) => {
-        currentBaseNote foreach (n => send(Some(new ShortMessage(NOTE_OFF, 1, n.getMessage()(1), 0)), 0))
-        notesOnCache.seq foreach (n => send(Some(new ShortMessage(NOTE_OFF, 2, n, 0)), 0))
+      case message: ShortMessage if (message.getCommand == NOTE_OFF && message.getChannel == 0) => {
+        currentBaseNote foreach (n => send(new ShortMessage(NOTE_OFF, 1, n.getMessage()(1), 0), 0))
+        notesOnCache.seq foreach (n => send(new ShortMessage(NOTE_OFF, 2, n, 0), 0))
         notesOnCache = Set.empty
       }
 
-      case Some(message: ShortMessage) if (message.getCommand == NOTE_ON && message.getChannel == 2) => {
+      case message: ShortMessage if (message.getCommand == NOTE_ON && message.getChannel == 2) => {
         val ccy = message.getData1
 
        // println("Control change y: " + ccy)
@@ -119,17 +119,16 @@ class Keytar() extends MidiNode {
           case Some(m: ShortMessage) => {
             val note = baseNote + scale((ccy - 48))
 
-
             if (!notesOnCache(note) || (notesOnCache(note) && (currentTimeMillis() - timeLapsed) > 500)) {
 
               if (currentTimeMillis() - timeLapsed > 100) {
-                notesOnCache.seq foreach (n => send(Some(new ShortMessage(NOTE_OFF, 2, n, 0)), 0))
+                notesOnCache.seq foreach (n => send(new ShortMessage(NOTE_OFF, 2, n, 0), 0))
                 notesOnCache = Set.empty
               }
 
               timeLapsed = currentTimeMillis()
 
-              send(Some(new ShortMessage(NOTE_ON, 2, note, 64)), 0)
+              send(new ShortMessage(NOTE_ON, 2, note, 64), 0)
 
               notesOnCache = notesOnCache + note
 
@@ -139,9 +138,9 @@ class Keytar() extends MidiNode {
         }
       }
 
-      case Some(message: ShortMessage) if (message.getCommand == CONTROL_CHANGE && message.getData1 == 1) => {
+      case message: ShortMessage if (message.getCommand == CONTROL_CHANGE && message.getData1 == 1) => {
         //println("Control change x: " + x.getData2);
-        send(Some(new ShortMessage(PITCH_BEND, 2, 0, message.getData2 / 8)), 0)
+        send(new ShortMessage(PITCH_BEND, 2, 0, message.getData2 / 8), 0)
       }
 
       case _ => {

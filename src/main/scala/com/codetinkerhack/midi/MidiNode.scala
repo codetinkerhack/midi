@@ -9,9 +9,9 @@ import scala.collection.immutable._
   */
 object MidiNode {
 
-  def apply(func: (Option[MidiMessage], Long) => List[(Option[MidiMessage], Long)]) = {
+  def apply(func: (MidiMessage, Long) => List[(MidiMessage, Long)]) = {
     new MidiNode() {
-      override def processMessage(message: Option[MidiMessage], timestamp: Long): List[(Option[MidiMessage], Long)] = {
+      override def processMessage(message: MidiMessage, timestamp: Long): List[(MidiMessage, Long)] = {
         func(message, timestamp)
       }
     }
@@ -25,7 +25,7 @@ object MidiNode {
 
       override def send(message: MidiMessage, timeStamp: Long): Unit = {
         try {
-          midiNode.receive(Some(message), timeStamp)
+          midiNode.receive(message, timeStamp)
         }
         catch {
           case e: Exception => println(e.printStackTrace())
@@ -41,8 +41,8 @@ object MidiNode {
   def apply(receiver: Receiver) = {
 
     val midiNode = new MidiNode {
-      override def receive(message: Option[MidiMessage], timeStamp: Long): Unit = {
-        message foreach { m => receiver.send(m, timeStamp) }
+      override def receive(message: MidiMessage, timeStamp: Long): Unit = {
+        receiver.send(message, timeStamp)
       }
     }
 
@@ -62,17 +62,17 @@ trait MidiNode {
     node
   }
 
-  def processMessage(message: Option[MidiMessage], timeStamp: Long): List[(Option[MidiMessage], Long)] = List((message, timeStamp))
+  def processMessage(message: MidiMessage, timeStamp: Long): List[(MidiMessage, Long)] = List((message, timeStamp))
 
   def in(channel: Int): MidiNode = ChannelRouter(channel).connect(this)
 
   def out(channel: Int): MidiNode = this.connect(ChannelFilter(channel))
 
-  def receive(message: Option[MidiMessage], timeStamp: Long): Unit = {
+  def receive(message: MidiMessage, timeStamp: Long): Unit = {
     processMessage(message, timeStamp).foreach(m => send(m._1, m._2))
   }
 
-  final def send(message: Option[MidiMessage], timeStamp: Long): Unit = {
+  final def send(message: MidiMessage, timeStamp: Long): Unit = {
     nodes.foreach( _.receive(message, timeStamp))
   }
 
