@@ -23,7 +23,6 @@ class ChordReader extends MidiNode {
 
     message match {
       case m: ShortMessage if (m.getCommand == ShortMessage.NOTE_ON) =>
-        //println(s"Note Chord analyzer: ${m.getData1} , channel: ${m.getChannel}")
         val keysCombo = getKeysCombo(m.getData1, PRESSED, this.keysCombo)
         if (chordMap.containsKey(keysCombo)) {
           chordOff(audibleKeysCombo)
@@ -33,13 +32,13 @@ class ChordReader extends MidiNode {
         this.keysCombo = keysCombo
 
       case m: ShortMessage if (m.getCommand == ShortMessage.NOTE_OFF) =>
-        val keysCombo1 = getKeysCombo(m.getData1, RELEASED, this.keysCombo)
-        if (chordMap.containsKey(keysCombo1) || keysCombo1 == 0) {
+        val keysCombo = getKeysCombo(m.getData1, RELEASED, this.keysCombo)
+        if (chordMap.containsKey(keysCombo) || keysCombo == 0) {
           if (audibleKeysCombo != 0) chordOff(audibleKeysCombo)
-          this.audibleKeysCombo = keysCombo1
-          chordOn(keysCombo1)
+          this.audibleKeysCombo = keysCombo
+          chordOn(keysCombo)
         }
-        this.keysCombo = keysCombo1
+        this.keysCombo = keysCombo
 
       case _ =>
 

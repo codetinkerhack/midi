@@ -13,11 +13,8 @@ case class ChannelFilter(channel: Int) extends MidiNode {
         send(message,timeStamp)
       }
 
-      case m: MetaMessage =>
-        send(message, timeStamp)
-
       case _ =>
-
+        send(message, timeStamp)
     }
   }
 }

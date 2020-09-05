@@ -18,7 +18,6 @@ class HashMidiMessage(m: ShortMessage) extends ShortMessage {
 
 
   override def equals(o: Any): Boolean = {
-    //if (this eq o) return true
     if (!(o.isInstanceOf[HashMidiMessage])) return false
     val that = o.asInstanceOf[HashMidiMessage]
     hash == that.hashCode

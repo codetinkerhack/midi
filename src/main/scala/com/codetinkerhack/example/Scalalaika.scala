@@ -26,40 +26,42 @@ object Scalalaika extends App {
 
     val midiDelay = new MidiDelay()
     val scalaLika = getScalalaika()
+    val chordKeysReader = getChordKeysReader()
     val chordModifier = new ChordModifier()
     val midiOut = MidiNode(output.getReceiver)
     val midiNanoPad = MidiNode(inputNanoPad.getTransmitters.get(0))
 
-    chordModifier.setBaseChord(new Chord("C 7"))
-
-    val instrumentSelector = Scalalaika.getInstrumentSelector()
-
-    midiNanoPad.out(0).connect(instrumentSelector)
-
-    instrumentSelector.out(0)
-      .connect(chordReader).out(0)
-      .connect(scalaLika)
-
-    scalaLika.out(1).connect(midiDelay).out(1).connect(chordModifier).out(1).connect(Transposer(0)).connect(midiOut)
-    scalaLika.out(2).connect(chordModifier).out(2).connect(Transposer(0)).connect(midiOut)
+    midiNanoPad.out(0)
+      .connect(chordKeysReader).out(1)
+      .connect(chordReader).out(1)
+      .connect(scalaLika).out(1)
+      .connect(midiDelay).out(1)
+      .connect(chordModifier).out(1)
+      .connect(MidiFilter { message =>
+        import ShortMessage._
+        message match {
+          case m: ShortMessage if m.getCommand == PITCH_BEND => true
+          case m: ShortMessage if m.getCommand == PROGRAM_CHANGE => true
+          case m: ShortMessage if m.getCommand == NOTE_ON || m.getCommand == NOTE_OFF => true
+          case _: MetaMessage => true
+          case _ => false
+        }
+      })
+      .connect(midiOut)
   }
 
-  def getInstrumentSelector() = MidiNode (
+  def getChordKeysReader() = MidiNode (
     (message, timeStamp) => {
 
-      val baseInstrument = IndexedSeq(0, 1, 2, 3)
-      val soloInstrument = IndexedSeq(0, 1, 2, 3)
+      val soloInstrument = IndexedSeq(1, 2, 3, 4)
 
       import javax.sound.midi.ShortMessage._
 
       message match {
         case m: ShortMessage if (m.getCommand == NOTE_OFF || m.getCommand == NOTE_ON) => {
-          // println(s"Note: ${m.getData1} index: ${(m.getData1 - 36)/16} base: ${baseInstrument((m.getData1 - 36)/16)} solo: ${soloInstrument((m.getData1 - 36)/16)}")
           var messageList: List[(ShortMessage, Long)] = List()
-
-          messageList = (new ShortMessage(PROGRAM_CHANGE, 1, baseInstrument((m.getData1 - 36) / 16), 0), 0L) :: messageList
-          messageList = (new ShortMessage(PROGRAM_CHANGE, 2, soloInstrument((m.getData1 - 36) / 16), 0), 0L) :: messageList
-          messageList = (new ShortMessage(m.getCommand, m.getChannel, (m.getData1 - 36) % 16, 0), 0L) :: messageList
+          //messageList = (new ShortMessage(PROGRAM_CHANGE, 1, soloInstrument((m.getData1 - 36) / 16), 0), 0L) :: messageList
+          messageList = (new ShortMessage(m.getCommand, 1, (m.getData1 - 36) % 16, 0), 0L) :: messageList
 
           messageList
         }
@@ -87,17 +89,11 @@ object Scalalaika extends App {
 
         case m: MetaMessage => {
           val newChord = new Chord(new String(m.getData))
-          println(s"Chord received: ${newChord}")
-
           if (currentChord != newChord) {
-
             currentChord = newChord
-
-            val notesOff = notesOnCache.map(n => (new ShortMessage(NOTE_OFF, 2, n, 0), 0l))
-
+            val notesOff = notesOnCache.map(n => (new ShortMessage(NOTE_OFF, 1, n, 0), 0l))
             notesOnCache = Set.empty
-
-            notesOff.toList  ::: ((message, 0L) :: List.empty)
+            notesOff.toList ::: ((message, timeStamp) :: List.empty)
           } else
             List((message, timeStamp))
         }
@@ -113,7 +109,7 @@ object Scalalaika extends App {
 
             var notesOff = Set[(ShortMessage, Long)]()
             if (currentTimeMillis() - timeLapsed > 100) {
-              notesOff = notesOnCache.map(n => (new ShortMessage(NOTE_OFF, 2, n, 0), 0L))
+              notesOff = notesOnCache.map(n => (new ShortMessage(NOTE_OFF, 1, n, 0), 0L))
 
               notesOnCache = Set.empty
               noteList = noteList ::: notesOff.toList
@@ -123,16 +119,14 @@ object Scalalaika extends App {
 
             notesOnCache = notesOnCache + note
 
-            noteList = noteList ::: List((new ShortMessage(NOTE_ON, 2, note, 64), 20L))
+            noteList = noteList ::: List((new ShortMessage(NOTE_ON, 1, note, 64), 20L))
           }
 
           noteList
         }
         case message: ShortMessage if (message.getCommand == CONTROL_CHANGE && message.getData1 == 1) => {
-          //println("Control change x: " + x.getData2);
           offset = (message.getData2 / 32)
-//          List((new ShortMessage(PITCH_BEND, 2, 0, message.getData2 / 26 - message.getData2 % 26), 0l))
-          List()
+          List((new ShortMessage(PITCH_BEND, 1, 0, message.getData2 % 8), 0l))
         }
 
         case _ => List((message, timeStamp))
