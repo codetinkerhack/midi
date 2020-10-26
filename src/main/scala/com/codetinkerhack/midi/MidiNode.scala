@@ -1,5 +1,7 @@
 package com.codetinkerhack.midi
 
+import java.security.DrbgParameters.NextBytes
+
 import javax.sound.midi._
 
 import scala.collection.immutable._
@@ -9,23 +11,45 @@ import scala.collection.immutable._
   */
 object MidiNode {
 
-  def apply(func: (MidiMessage, Long) => List[(MidiMessage, Long)]) = {
+  def apply(): MidiNode = apply("")
+  def apply(name: String): MidiNode = MidiNode((message, timeStamp) => List((message, timeStamp)))
+
+  def apply(func: (MidiMessageContainer, Long) => List[(MidiMessageContainer, Long)]): MidiNode = apply("", func)
+  def apply(name: String, func: (MidiMessageContainer, Long) => List[(MidiMessageContainer, Long)]) = {
     new MidiNode() {
-      override def processMessage(message: MidiMessage, timestamp: Long): List[(MidiMessage, Long)] = {
-        func(message, timestamp)
+
+      override def getName() = {
+        name
+      }
+
+      override def processMessage(message: MidiMessageContainer, timestamp: Long, chain: List[MidiNode]): Unit = {
+        func(message, timestamp).foreach( m => super.send(m._1, m._2, chain))
       }
     }
   }
 
   def apply(transmitter: Transmitter) = {
 
-    val midiNode = new MidiNode() {}
+    val midiNode = new MidiNode() {
+      var next: MidiNode = null
+
+      override def getName(): String = "Start"
+
+      override def connect(next: MidiNode): MidiNode = {
+        this.next = next
+        this
+      }
+
+      override def processMessage(message: MidiMessageContainer, timeStamp: Long, chain: List[MidiNode]) {
+        next.processMessage(message, timeStamp, null)
+      }
+    }
 
     transmitter.setReceiver(new Receiver {
 
       override def send(message: MidiMessage, timeStamp: Long): Unit = {
         try {
-          midiNode.receive(message, timeStamp)
+          midiNode.processMessage(new MidiMessageContainer(message), timeStamp, null)
         }
         catch {
           case e: Exception => println(e.printStackTrace())
@@ -41,8 +65,9 @@ object MidiNode {
   def apply(receiver: Receiver) = {
 
     val midiNode = new MidiNode {
-      override def receive(message: MidiMessage, timeStamp: Long): Unit = {
-        receiver.send(message, timeStamp)
+      override def processMessage(message: MidiMessageContainer, timeStamp: Long, chain: List[MidiNode]): Unit = {
+        receiver.send(message.get, timeStamp)
+        List()
       }
     }
 
@@ -51,31 +76,52 @@ object MidiNode {
 }
 
 trait MidiNode {
-  val OUT_1 = 1
-  val OUT_2 = 2
 
-  val BROADCAST_CHANNEL: Int = 100
-  private var nodes = Set[MidiNode]()
+  def log(str: String, message: MidiMessageContainer): Unit = {
+    (1L to message.getDepth).foreach(_ => printf("\t"))
+    println(str)
+  }
+
+  def getName() = {
+    this.getClass.getSimpleName
+  }
 
   def connect(node: MidiNode): MidiNode = {
-    nodes = nodes + node
-    node
+    MidiChain().connect(this).connect(node)
   }
 
-  def processMessage(message: MidiMessage, timeStamp: Long): List[(MidiMessage, Long)] = List((message, timeStamp))
-
-  def in(channel: Int): MidiNode = ChannelRouter(channel).connect(this)
-
-  def out(channel: Int): MidiNode = this.connect(ChannelFilter(channel))
-
-  def receive(message: MidiMessage, timeStamp: Long): Unit = {
-    processMessage(message, timeStamp).foreach(m => send(m._1, m._2))
+  final def in(channel: Int): MidiNode = {
+    val node = ChannelFilter(channel)
+    node.connect(this)
   }
 
-  final def send(message: MidiMessage, timeStamp: Long): Unit = {
-    nodes.foreach( _.receive(message, timeStamp))
+  final def routeTo(channel: Int): MidiNode = {
+    val node = ChannelRouter(channel)
+    node.connect(this)
   }
 
-  def close(): Unit = nodes.foreach( _.close())
+  final def out(channel: Int): MidiNode = {
+    val node = ChannelFilter(channel)
+    this.connect(node)
+  }
 
+  final def receive(message: MidiMessageContainer, timeStamp: Long, chain: List[MidiNode]) {
+    log(s"Node: ${this.getName}", message)
+    processMessage(message, timeStamp, chain)
+  }
+
+  def processMessage(message: MidiMessageContainer, timeStamp: Long, chain: List[MidiNode]) {
+    send(message, timeStamp, chain)
+  }
+
+  def send(message: MidiMessageContainer, timeStamp: Long, chain: List[MidiNode]) {
+    if(chain.nonEmpty) {
+      val newMessage = message.clone()
+      newMessage.incDepth()
+      chain.head.receive(newMessage, timeStamp, chain.tail)
+    }
+  }
+
+
+  def close(): Unit = this.close()
 }

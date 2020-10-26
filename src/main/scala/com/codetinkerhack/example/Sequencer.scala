@@ -19,12 +19,14 @@ object Sequencer extends App {
     val outputMidi = MidiNode(output.getReceiver)
 
     MidiSequencer("069_6-8_Stick_01.midi")
-      .connect(MidiFilter( {
-        case m: ShortMessage if m.getCommand == NOTE_OFF || m.getCommand == NOTE_ON => true
-        case _ => false
+      .connect(MidiFilter( { message =>
+            message.get match {
+              case m: ShortMessage if m.getCommand == NOTE_OFF || m.getCommand == NOTE_ON => true
+              case _ => false
+            }
       }))
       .connect(MidiUtil.debugMidi)
-      .connect(outputMidi.in(10))
+      .connect(outputMidi.routeTo(10))
 
   }
 

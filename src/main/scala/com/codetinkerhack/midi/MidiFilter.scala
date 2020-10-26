@@ -1,12 +1,12 @@
 package com.codetinkerhack.midi
 
-import javax.sound.midi.{MetaMessage, MidiMessage, ShortMessage}
+import scala.collection.immutable.List
 
-case class MidiFilter(filter: (MidiMessage) => Boolean ) extends MidiNode {
+case class MidiFilter(filter: (MidiMessageContainer) => Boolean ) extends MidiNode {
 
-  override def receive(message: MidiMessage, timeStamp: Long): Unit = {
+  override def processMessage(message: MidiMessageContainer, timeStamp: Long, chain: List[MidiNode]): Unit = {
     if (filter(message)) {
-        send(message,timeStamp)
+      send(message, timeStamp, chain)
     }
   }
 }

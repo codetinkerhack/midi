@@ -3,7 +3,8 @@ package com.codetinkerhack.example
 import java.lang.System.currentTimeMillis
 
 import com.codetinkerhack.midi._
-import javax.sound.midi.{MetaMessage, MidiMessage, ShortMessage}
+import javax.sound.midi.ShortMessage.{CONTROL_CHANGE, NOTE_OFF, NOTE_ON}
+import javax.sound.midi.{MetaMessage, ShortMessage}
 
 import scala.collection.immutable.List
 
@@ -29,40 +30,84 @@ object Scalalaika extends App {
     val chordKeysReader = getChordKeysReader()
     val chordModifier = new ChordModifier()
     val midiOut = MidiNode(output.getReceiver)
-    val midiNanoPad = MidiNode(inputNanoPad.getTransmitters.get(0))
+    val midiNanoPad = MidiNode()
 
-    midiNanoPad.out(0)
-      .connect(chordKeysReader).out(1)
-      .connect(chordReader).out(1)
-      .connect(scalaLika).out(1)
-      .connect(midiDelay).out(1)
-      .connect(chordModifier).out(1)
+
+    val chain = midiNanoPad
+      .connect(MidiFilter { message =>
+      import ShortMessage._
+      message.get match {
+        case m: ShortMessage if m.getCommand == NOTE_ON || m.getCommand == NOTE_OFF => true
+//        case m: ShortMessage if m.getCommand == CONTROL_CHANGE => false
+        case _ => false
+      }
+    })
+      .connect(chordKeysReader)
+      .connect(chordReader)
+      .connect(scalaLika.in(0))
+      .connect(chordModifier)
       .connect(MidiFilter { message =>
         import ShortMessage._
-        message match {
+        message.get match {
           case m: ShortMessage if m.getCommand == PITCH_BEND => true
           case m: ShortMessage if m.getCommand == PROGRAM_CHANGE => true
           case m: ShortMessage if m.getCommand == NOTE_ON || m.getCommand == NOTE_OFF => true
-          case _: MetaMessage => true
           case _ => false
         }
       })
+      .connect(MidiUtil.debugMidi)
       .connect(midiOut)
+
+    val chain1 = midiNanoPad
+      .connect(ChannelRouter(1)).connect(MidiFilter { message =>
+        import ShortMessage._
+        message.get match {
+          case m: ShortMessage if m.getCommand == CONTROL_CHANGE => true
+          case _ => false
+        }
+      })
+      .connect(scalaLika.in(1))
+      .connect(midiDelay)
+      .connect(chordModifier)
+      .connect(MidiFilter { message =>
+        import ShortMessage._
+        message.get match {
+          case m: ShortMessage if m.getCommand == PITCH_BEND => true
+          case m: ShortMessage if m.getCommand == PROGRAM_CHANGE => true
+          case m: ShortMessage if m.getCommand == NOTE_ON || m.getCommand == NOTE_OFF => true
+          case _ => false
+        }
+      })
+      .connect(MidiUtil.debugMidi)
+      .connect(midiOut)
+
+    val chain2 = MidiParallel(chain, chain1)
+    MidiNode(inputNanoPad.getTransmitters.get(0)).connect(chain2)
+//    chain2.processMessage(new MidiMessageContainer(new ShortMessage(NOTE_ON, 0, 36, 0)), 0L, null)
+//    Thread.sleep(100)
+//    chain2.processMessage(new MidiMessageContainer(new ShortMessage(CONTROL_CHANGE, 0, 2, 0)), 0L, null)
+//    Thread.sleep(1000)
+//    chain2.processMessage(new MidiMessageContainer(new ShortMessage(NOTE_OFF, 0, 36, 0)), 0L, null)
+//    chain2.processMessage(new MidiMessageContainer(new ShortMessage(NOTE_ON, 0, 37, 0)), 0L, null)
+//    Thread.sleep(100)
+//    chain2.processMessage(new MidiMessageContainer(new ShortMessage(CONTROL_CHANGE, 0, 2, 30)), 0L, null)
   }
 
-  def getChordKeysReader() = MidiNode (
+
+
+  def getChordKeysReader() = MidiNode ( "ChordKeysReader",
+
     (message, timeStamp) => {
 
       val soloInstrument = IndexedSeq(1, 2, 3, 4)
 
       import javax.sound.midi.ShortMessage._
 
-      message match {
+      message.get match {
         case m: ShortMessage if (m.getCommand == NOTE_OFF || m.getCommand == NOTE_ON) => {
-          var messageList: List[(ShortMessage, Long)] = List()
+          var messageList: List[(MidiMessageContainer, Long)] = List()
           //messageList = (new ShortMessage(PROGRAM_CHANGE, 1, soloInstrument((m.getData1 - 36) / 16), 0), 0L) :: messageList
-          messageList = (new ShortMessage(m.getCommand, 1, (m.getData1 - 36) % 16, 0), 0L) :: messageList
-
+          messageList = (new MidiMessageContainer(new ShortMessage(m.getCommand, 0, (m.getData1 - 36) % 16, m.getData2)), 0L) :: messageList
           messageList
         }
         case _ => List((message, timeStamp))
@@ -71,6 +116,7 @@ object Scalalaika extends App {
 
   def getScalalaika() = new MidiNode {
 
+    override def getName(): String = "Skalalika"
 
     private val baseNote = 48
     private val scale = Array(0, 4, 7, 10, 16)
@@ -82,54 +128,43 @@ object Scalalaika extends App {
     private var offset = 0
 
 
-    override def processMessage(message: MidiMessage, timeStamp: Long): List[(MidiMessage, Long)] = {
+    override def processMessage(message: MidiMessageContainer, timeStamp: Long, chain: List[MidiNode]): Unit = {
       import ShortMessage._
 
-      message match {
+      message.get match {
 
-        case m: MetaMessage => {
+        case m: MetaMessage if m.getType == 2 => {
           val newChord = new Chord(new String(m.getData))
-          if (currentChord != newChord) {
+          if (currentChord == null || (currentChord.chord != newChord.chord && newChord.chord != Chord.NONE)) {
             currentChord = newChord
-            val notesOff = notesOnCache.map(n => (new ShortMessage(NOTE_OFF, 1, n, 0), 0l))
+            notesOnCache.foreach(n => send(new MidiMessageContainer(new ShortMessage(NOTE_OFF, 1, n, 0)), 0L, chain))
             notesOnCache = Set.empty
-            notesOff.toList ::: ((message, timeStamp) :: List.empty)
-          } else
-            List((message, timeStamp))
+          }
+          send(message, timeStamp, chain)
         }
 
-        case message: ShortMessage if (message.getCommand == CONTROL_CHANGE && message.getData1 == 2 && currentChord != null) => {
-          val ccy = message.getData2
+        case m: ShortMessage if (m.getCommand == CONTROL_CHANGE && m.getData1 == 2 && currentChord != null) => {
+          val ccy = m.getData2
 
           val note = baseNote + scale((128 - ccy) / 26) + offset
 
-          var noteList = List.empty[(ShortMessage, Long)]
-
           if (!notesOnCache(note) || (notesOnCache(note) && (currentTimeMillis() - timeLapsed) > 50)) {
-
-            var notesOff = Set[(ShortMessage, Long)]()
             if (currentTimeMillis() - timeLapsed > 100) {
-              notesOff = notesOnCache.map(n => (new ShortMessage(NOTE_OFF, 1, n, 0), 0L))
-
+              notesOnCache.foreach(n => send(new MidiMessageContainer(new ShortMessage(NOTE_OFF, 1, n, 0)), 0L, chain))
               notesOnCache = Set.empty
-              noteList = noteList ::: notesOff.toList
             }
-
             timeLapsed = currentTimeMillis()
-
             notesOnCache = notesOnCache + note
-
-            noteList = noteList ::: List((new ShortMessage(NOTE_ON, 1, note, 64), 20L))
+            send(new MidiMessageContainer(new ShortMessage(NOTE_ON, 1, note, 64)), 0L, chain)
           }
-
-          noteList
         }
+
         case message: ShortMessage if (message.getCommand == CONTROL_CHANGE && message.getData1 == 1) => {
           offset = (message.getData2 / 32)
-          List((new ShortMessage(PITCH_BEND, 1, 0, message.getData2 % 8), 0l))
+          send(new MidiMessageContainer(new ShortMessage(PITCH_BEND, 1, 0, message.getData2 % 8)), 0l, chain)
         }
 
-        case _ => List((message, timeStamp))
+        case _ => send(message, timeStamp, chain)
       }
 
     }
@@ -143,6 +178,8 @@ object Scalalaika extends App {
 
     // Key combos to Chord mapping
 
+    //No chord - all off
+    chordReader.addToChordMap("0".b, new Chord("N N"))
     //F
     chordReader.addToChordMap("1".b, new Chord("F maj"))
     // Fm

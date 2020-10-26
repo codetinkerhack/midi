@@ -11,7 +11,7 @@ object MidiUtil {
 
     import ShortMessage._
 
-    message match {
+    message.get match {
       case m: ShortMessage if (m.getCommand == PROGRAM_CHANGE) =>
         println("Programm Change")
         List((message, timeStamp))

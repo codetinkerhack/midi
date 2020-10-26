@@ -6,6 +6,8 @@ import java.util.concurrent.{ExecutorService, Executors, Future}
 
 import javax.sound.midi._
 
+import scala.collection.immutable.List
+
 
 class ChordReader extends MidiNode {
 
@@ -19,32 +21,37 @@ class ChordReader extends MidiNode {
   private val executor: ExecutorService = Executors.newFixedThreadPool(1)
   private var chordScheduled: Future[_] = _
 
-  override def receive(message: MidiMessage, timeStamp: Long) {
+  override def getName(): String = "ChordReader"
 
-    message match {
+  override def processMessage(message: MidiMessageContainer, timeStamp: Long, chain: List[MidiNode]): Unit = {
+
+    message.get match {
       case m: ShortMessage if (m.getCommand == ShortMessage.NOTE_ON) =>
         val keysCombo = getKeysCombo(m.getData1, PRESSED, this.keysCombo)
         if (chordMap.containsKey(keysCombo)) {
           chordOff(audibleKeysCombo)
           this.audibleKeysCombo = keysCombo
-          chordOn(keysCombo)
+          chordOn(keysCombo, chain)
+          val nothing = new String()
+          this.keysCombo = keysCombo
+          send(new MidiMessageContainer(new MetaMessage(1, nothing.getBytes(), nothing.getBytes().length), message.getDepth), 0, chain)
         }
-        this.keysCombo = keysCombo
 
       case m: ShortMessage if (m.getCommand == ShortMessage.NOTE_OFF) =>
         val keysCombo = getKeysCombo(m.getData1, RELEASED, this.keysCombo)
         if (chordMap.containsKey(keysCombo) || keysCombo == 0) {
           if (audibleKeysCombo != 0) chordOff(audibleKeysCombo)
           this.audibleKeysCombo = keysCombo
-          chordOn(keysCombo)
+          chordOn(keysCombo, chain)
+          this.keysCombo = keysCombo
+          val nothing = new String()
+          send(new MidiMessageContainer(new MetaMessage(1, nothing.getBytes(), nothing.getBytes().length), message.getDepth), 0, chain)
         }
-        this.keysCombo = keysCombo
 
-      case _ =>
+      case _ => send(message, timeStamp, chain)
 
     }
 
-    send(message, timeStamp)
   }
 
   def addToChordMap(keysCombo: Int, c: Chord) {
@@ -58,13 +65,13 @@ class ChordReader extends MidiNode {
   }
 
 
-  private def chordOn(keysCombo: Int) {
+  private def chordOn(keysCombo: Int, chain: List[MidiNode]) {
     if (chordMap.containsKey(keysCombo)) {
 //      if(chordScheduled  != null)
 //        chordScheduled.cancel(true)
 
       chordToPlay.set(keysCombo)
-      chordScheduled = executor.submit(new ChordsPlayer())
+      chordScheduled = executor.submit(new ChordsPlayer(chain))
 
     }
   }
@@ -76,7 +83,7 @@ class ChordReader extends MidiNode {
       keysCombo & ~(1 << key)
   }
 
-  private class ChordsPlayer extends Runnable {
+  private class ChordsPlayer(chain: List[MidiNode]) extends Runnable {
 
     override def run() {
       try {
@@ -89,7 +96,7 @@ class ChordReader extends MidiNode {
       val chord = chordMap.get(keysCombo)
       val chordBytes = chord.chord.getBytes
 
-      send(new MetaMessage(2, chordBytes, chordBytes.length), 0)
+      send(new MidiMessageContainer(new MetaMessage(2, chordBytes, chordBytes.length), 0), 0, chain)
     }
   }
 

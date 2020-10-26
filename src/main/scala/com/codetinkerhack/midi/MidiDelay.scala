@@ -1,7 +1,5 @@
 package com.codetinkerhack.midi
 
-import javax.sound.midi.MidiMessage
-
 import scala.collection.immutable.TreeMap
 
 
@@ -10,28 +8,23 @@ import scala.collection.immutable.TreeMap
   */
 class MidiDelay() extends MidiNode {
 
-
-  var queue = new TreeMap[Long, MidiMessage]()
-
+  var queue = new TreeMap[Long, (MidiMessageContainer, List[MidiNode])]()
   new Scheduler()
 
-
   def getCurrentTimeMillis(): Long = {
-    return System.nanoTime / 1000000l
+    System.nanoTime / 1000000l
   }
 
 
   class Scheduler() {
 
-    var prevTime = getCurrentTimeMillis
+    var prevTime = getCurrentTimeMillis()
 
     new Thread() {
-
       override def run() {
-
         while (true) {
 
-          val nowTime = getCurrentTimeMillis
+          val nowTime = getCurrentTimeMillis()
 
           if (nowTime >= prevTime + 1) {
             prevTime = nowTime
@@ -42,18 +35,15 @@ class MidiDelay() extends MidiNode {
               kv foreach { v =>
                 if (v._1 <= nowTime) {
                   println(s"Scheduler send ${v._1} and ${v._2}")
-                  send(v._2, v._1)
-
+                  send(v._2._1, v._1, v._2._2)
 
                   queue = queue.tail
                 }
               }
-
-
             }
           }
-//          else
-//            Thread.sleep(10)
+          else
+            Thread.sleep(10)
         }
       }
 
@@ -61,15 +51,16 @@ class MidiDelay() extends MidiNode {
 
   }
 
-  override def receive(message: MidiMessage, timeStamp: Long): Unit = {
+  override def processMessage(message: MidiMessageContainer, timeStamp: Long, chain: List[MidiNode]) {
 
     if (timeStamp == 0) {
-      send(message, 0)
+      send(message, 0, chain)
     }
-    else
+    else {
       queue.synchronized {
-        queue += ((timeStamp + getCurrentTimeMillis) -> message)
+        queue += ((timeStamp + getCurrentTimeMillis) -> (message, chain))
       }
+    }
   }
 
 }
