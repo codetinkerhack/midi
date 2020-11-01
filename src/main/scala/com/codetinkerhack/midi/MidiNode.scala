@@ -22,8 +22,8 @@ object MidiNode {
         name
       }
 
-      override def processMessage(message: MidiMessageContainer, chain: List[MidiNode]): Unit = {
-        func(message).foreach(super.send(_, chain))
+      override def processMessage(message: MidiMessageContainer, send: MidiMessageContainer => Unit): Unit = {
+        func(message).foreach(send(_))
       }
     }
   }
@@ -40,7 +40,7 @@ object MidiNode {
         this
       }
 
-      override def processMessage(message: MidiMessageContainer, chain: List[MidiNode]) {
+      override def processMessage(message: MidiMessageContainer, send: MidiMessageContainer => Unit): Unit = {
         next.processMessage(message, null)
       }
     }
@@ -65,7 +65,7 @@ object MidiNode {
   def apply(receiver: Receiver) = {
 
     val midiNode = new MidiNode {
-      override def processMessage(message: MidiMessageContainer, chain: List[MidiNode]): Unit = {
+      override def processMessage(message: MidiMessageContainer, send: MidiMessageContainer => Unit): Unit = {
         receiver.send(message.get, message.getTimeStamp)
       }
     }
@@ -108,14 +108,15 @@ trait MidiNode {
 
   final def receive(message: MidiMessageContainer, chain: List[MidiNode]) {
     log(s"Node: ${this.getName}", message)
-    processMessage(message, chain)
+    val func: MidiMessageContainer => Unit =  message => this.send(message)(chain)
+    processMessage(message, func)
   }
 
-  def processMessage(message: MidiMessageContainer, chain: List[MidiNode]) {
-    send(message, chain)
+  def processMessage(message: MidiMessageContainer, send: MidiMessageContainer => Unit): Unit = {
+    send(message)
   }
 
-  def send(message: MidiMessageContainer, chain: List[MidiNode]) {
+  def send(message: MidiMessageContainer)(chain: List[MidiNode]) {
     if(chain.nonEmpty) {
       val newMessage = message.clone()
       newMessage.incDepth()

@@ -20,9 +20,9 @@ case class MidiChain() extends MidiNode {
     }
   }
 
-  override def send(message: MidiMessageContainer, chain1: List[MidiNode]): Unit = {
+  override def send(message: MidiMessageContainer)(chain1: List[MidiNode]): Unit = {
     val chainReversed = chain.reverse
-    chainReversed.head.processMessage(message, chainReversed.tail)
+    super.send(message)(chainReversed)
   }
 
   override def close(): Unit = {

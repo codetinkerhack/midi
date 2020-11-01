@@ -9,18 +9,18 @@ import scala.collection.immutable.List
   */
 case class ChannelRouter(channel: Int) extends MidiNode {
 
-  override def processMessage(message: MidiMessageContainer, chain: List[MidiNode]):  Unit = {
+  override def processMessage(message: MidiMessageContainer, send: MidiMessageContainer => Unit):  Unit = {
     message.get match {
       case m: ShortMessage => {
         val newMessage = new MidiMessageContainer(new ShortMessage(m.getCommand, channel, m.getData1, m.getData2), message.getDepth, message.getChord, timeStamp = 0L)
 
         log(s"Routed message to input channel: ${channel}", message)
-        send(newMessage, chain)
+        send(newMessage)
       }
 
       case _ =>
         log(s"Input passed through message", message)
-        send(message, chain)
+        send(message)
     }
   }
 }

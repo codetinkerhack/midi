@@ -9,7 +9,7 @@ import scala.collection.immutable.List
   */
 case class ChannelFilter(channel: Int) extends MidiNode {
 
-  override def processMessage(message: MidiMessageContainer, chain: List[MidiNode]): Unit = {
+  override def processMessage(message: MidiMessageContainer, send: MidiMessageContainer => Unit): Unit = {
     message.get match {
       case m: ShortMessage if m.getChannel != channel => {
         log(s"Filtered out message on channel: ${channel}, message: ${message.getType()}", message)
@@ -18,7 +18,7 @@ case class ChannelFilter(channel: Int) extends MidiNode {
 
       case _ =>
         log(s"Filter passed through, channel: ${channel}, message: ${message.getType()}", message)
-        send(message, chain)
+        send(message)
     }
   }
 }

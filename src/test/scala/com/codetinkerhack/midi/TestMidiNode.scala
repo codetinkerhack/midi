@@ -5,7 +5,7 @@ import scala.collection.immutable.List
 class TestMidiNode extends MidiNode {
   var history: List[MidiMessageContainer] = List()
 
-  override def processMessage(message: MidiMessageContainer, chain: List[MidiNode]): Unit = {
+  override def processMessage(message: MidiMessageContainer, send: MidiMessageContainer => Unit): Unit = {
     history = message :: history
   }
 
