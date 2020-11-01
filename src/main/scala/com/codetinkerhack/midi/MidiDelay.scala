@@ -35,7 +35,7 @@ class MidiDelay() extends MidiNode {
               kv foreach { v =>
                 if (v._1 <= nowTime) {
                   println(s"Scheduler send ${v._1} and ${v._2}")
-                  send(v._2._1, v._1, v._2._2)
+                  send(v._2._1, v._2._2)
 
                   queue = queue.tail
                 }
@@ -51,14 +51,14 @@ class MidiDelay() extends MidiNode {
 
   }
 
-  override def processMessage(message: MidiMessageContainer, timeStamp: Long, chain: List[MidiNode]) {
+  override def processMessage(message: MidiMessageContainer, chain: List[MidiNode]): Unit = {
 
-    if (timeStamp == 0) {
-      send(message, 0, chain)
+    if (message.getTimeStamp == 0) {
+      send(message, chain)
     }
     else {
       queue.synchronized {
-        queue += ((timeStamp + getCurrentTimeMillis) -> (message, chain))
+        queue += ((message.getTimeStamp + getCurrentTimeMillis) -> (message, chain))
       }
     }
   }

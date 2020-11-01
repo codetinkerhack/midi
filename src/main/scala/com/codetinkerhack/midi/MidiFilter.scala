@@ -4,9 +4,9 @@ import scala.collection.immutable.List
 
 case class MidiFilter(filter: (MidiMessageContainer) => Boolean ) extends MidiNode {
 
-  override def processMessage(message: MidiMessageContainer, timeStamp: Long, chain: List[MidiNode]): Unit = {
+  override def processMessage(message: MidiMessageContainer, chain: List[MidiNode]): Unit = {
     if (filter(message)) {
-      send(message, timeStamp, chain)
+      send(message, chain)
     }
   }
 }

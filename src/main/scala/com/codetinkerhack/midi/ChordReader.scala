@@ -23,7 +23,7 @@ class ChordReader extends MidiNode {
 
   override def getName(): String = "ChordReader"
 
-  override def processMessage(message: MidiMessageContainer, timeStamp: Long, chain: List[MidiNode]): Unit = {
+  override def processMessage(message: MidiMessageContainer, chain: List[MidiNode]): Unit = {
 
     message.get match {
       case m: ShortMessage if (m.getCommand == ShortMessage.NOTE_ON) =>
@@ -34,7 +34,7 @@ class ChordReader extends MidiNode {
           chordOn(keysCombo, chain)
           val nothing = new String()
           this.keysCombo = keysCombo
-          send(new MidiMessageContainer(new MetaMessage(1, nothing.getBytes(), nothing.getBytes().length), message.getDepth), 0, chain)
+          send(new MidiMessageContainer(new MetaMessage(1, nothing.getBytes(), nothing.getBytes().length), message.getDepth, new Chord(Chord.NONE), timeStamp = 0L), chain)
         }
 
       case m: ShortMessage if (m.getCommand == ShortMessage.NOTE_OFF) =>
@@ -45,10 +45,10 @@ class ChordReader extends MidiNode {
           chordOn(keysCombo, chain)
           this.keysCombo = keysCombo
           val nothing = new String()
-          send(new MidiMessageContainer(new MetaMessage(1, nothing.getBytes(), nothing.getBytes().length), message.getDepth), 0, chain)
+          send(new MidiMessageContainer(new MetaMessage(1, nothing.getBytes(), nothing.getBytes().length), message.getDepth,  new Chord(Chord.NONE), timeStamp = 0L), chain)
         }
 
-      case _ => send(message, timeStamp, chain)
+      case _ => send(message, chain)
 
     }
 
@@ -96,7 +96,7 @@ class ChordReader extends MidiNode {
       val chord = chordMap.get(keysCombo)
       val chordBytes = chord.chord.getBytes
 
-      send(new MidiMessageContainer(new MetaMessage(2, chordBytes, chordBytes.length), 0), 0, chain)
+      send(new MidiMessageContainer(new MetaMessage(2, chordBytes, chordBytes.length), 0, chord, timeStamp = 0L), chain)
     }
   }
 

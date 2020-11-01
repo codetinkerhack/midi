@@ -3,10 +3,10 @@ package com.codetinkerhack.midi
 import scala.collection.immutable.List
 
 class TestMidiNode extends MidiNode {
-  var history: List[(MidiMessageContainer, Long)] = List()
+  var history: List[MidiMessageContainer] = List()
 
-  override def processMessage(message: MidiMessageContainer, timeStamp: Long, chain: List[MidiNode]): Unit = {
-    history = (message, timeStamp) :: history
+  override def processMessage(message: MidiMessageContainer, chain: List[MidiNode]): Unit = {
+    history = message :: history
   }
 
   def getLastMessage() = {

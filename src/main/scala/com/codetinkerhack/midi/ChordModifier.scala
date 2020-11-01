@@ -22,7 +22,7 @@ class ChordModifier extends MidiNode {
 
   def getCurrentChord(): Chord = currentChord
 
-  override def processMessage(message: MidiMessageContainer, timeStamp: Long, chain: List[MidiNode]): Unit = {
+  override def processMessage(message: MidiMessageContainer, chain: List[MidiNode]): Unit = {
 
     notesOn.synchronized {
       message.get match {
@@ -30,15 +30,16 @@ class ChordModifier extends MidiNode {
 
           println(s"Chord received: ${new String(m.getData())}")
 
-          updateChord(new Chord(new String(m.getData)), chain)
+          updateChord(message.getChord, chain)
           state = CHORD_DONE
 
+          println(s"Stash queue size: " + notesStash.size)
           notesStash.reverse.foreach(n => {
             val m = n.get.asInstanceOf[ShortMessage]
-            val transposedMessage = new ShortMessage(m.getStatus, Chord.chordNoteReMap(baseChord, currentChord,
+            val transposedMessage = new ShortMessage(m.getStatus, Chord.chordNoteReMap(n.getChord, currentChord,
                m.getData1), m.getData2)
-            notesOn.add(new MidiMessageContainer(transposedMessage))
-            send(new MidiMessageContainer(transposedMessage), 0L, chain)
+            notesOn.add(new MidiMessageContainer(transposedMessage, chord = currentChord))
+            send(new MidiMessageContainer(transposedMessage, chord = currentChord), chain)
           })
           notesStash = List()
 
@@ -53,16 +54,16 @@ class ChordModifier extends MidiNode {
             // For all non percussion notes on / off
             if (m.getChannel != 9 && m.getChannel != 8 && (m.getCommand == ShortMessage.NOTE_ON || m.getCommand == ShortMessage.NOTE_OFF)) {
 
-              val transposedMessage = new ShortMessage(m.getStatus, Chord.chordNoteReMap(baseChord, currentChord,
+              val transposedMessage = new ShortMessage(m.getStatus, Chord.chordNoteReMap(baseChord, message.getChord,
                 m.getData1), m.getData2)
 
               if (state == CHORD_DONE) {
-                notesOn.add(new MidiMessageContainer(transposedMessage))
-                send(new MidiMessageContainer(transposedMessage), timeStamp, chain)
+                notesOn.add(new MidiMessageContainer(transposedMessage, chord = message.getChord))
+                send(new MidiMessageContainer(transposedMessage, chord = message.getChord), chain)
               }
               else if (state == CHORD_READING && m.getCommand == ShortMessage.NOTE_OFF) {
-                notesOn.remove(new MidiMessageContainer(transposedMessage))
-                send(new MidiMessageContainer(transposedMessage), timeStamp, chain)
+                notesOn.remove(new MidiMessageContainer(transposedMessage, chord = message.getChord))
+                send(new MidiMessageContainer(transposedMessage, chord = message.getChord).getNoteOff(), chain)
               }
               else if (state == CHORD_READING && m.getCommand == ShortMessage.NOTE_ON) {
                 println(s"Stashing")
@@ -70,10 +71,10 @@ class ChordModifier extends MidiNode {
               }
 
             } else if (m.getChannel == 9 || m.getChannel == 8) { // Drums
-              send(message, timeStamp, chain)
+              send(message, chain)
             } else if (m.getCommand != ShortMessage.NOTE_ON && m.getCommand != ShortMessage.NOTE_OFF) {
               // println(s"Other non noteon/off length: ${m.getMessage.length}, NoteOn: ${m.getCommand == ShortMessage.NOTE_ON}, NoteOff: ${m.getCommand == ShortMessage.NOTE_OFF}, ${m.getChannel}, ${m.getData1},  ${m.getData2}")
-              send(message, timeStamp, chain)
+              send(message, chain)
             }
           } catch {
             case e: InvalidMidiDataException => {
@@ -83,7 +84,7 @@ class ChordModifier extends MidiNode {
         }
         case _ => {
           // println("Other message received");
-          send(message, timeStamp, chain)
+          send(message, chain)
         }
       }
     }
@@ -104,23 +105,20 @@ class ChordModifier extends MidiNode {
 
     notesOn.forEach(m => {
       try {
+        send(m.getNoteOff(), chain)
+
         val message = m.get.asInstanceOf[ShortMessage]
-        val offMessage = new MidiMessageContainer(new ShortMessage(ShortMessage.NOTE_OFF, message.getChannel, Chord.chordNoteReMap(baseChord,
-          oldChord, message.getData1), 0), m.getDepth)
-
-        send(offMessage, 0L, chain)
-
-        val onMessage =  new MidiMessageContainer(new ShortMessage(ShortMessage.NOTE_ON, message.getChannel, Chord.chordNoteReMap(baseChord,
-          newChord, message.getData1), message.getData2), m.getDepth)
-
-        send(onMessage, 0L, chain)
-
+//        val onMessage =  new MidiMessageContainer(new ShortMessage(ShortMessage.NOTE_ON, message.getChannel, Chord.chordNoteReMap(m.getChord,
+//                          newChord, message.getData1), message.getData2), m.getDepth, chord = newChord)
+//
+//        send(onMessage, chain)
       } catch {
         case ex: Exception =>  {
           ex.printStackTrace()
         }
       }
     })
+    notesOn.clear()
   }
 
 

@@ -1,7 +1,6 @@
 package com.codetinkerhack.midi
 
-import java.security.DrbgParameters.NextBytes
-
+import com.codetinkerhack.midi.MidiNode.DEBUG
 import javax.sound.midi._
 
 import scala.collection.immutable._
@@ -10,20 +9,21 @@ import scala.collection.immutable._
   * Created by Evgeniy on 26/04/2015.
   */
 object MidiNode {
+  val DEBUG = false
 
   def apply(): MidiNode = apply("")
-  def apply(name: String): MidiNode = MidiNode((message, timeStamp) => List((message, timeStamp)))
+  def apply(name: String): MidiNode = MidiNode(message => List(message))
 
-  def apply(func: (MidiMessageContainer, Long) => List[(MidiMessageContainer, Long)]): MidiNode = apply("", func)
-  def apply(name: String, func: (MidiMessageContainer, Long) => List[(MidiMessageContainer, Long)]) = {
+  def apply(func: (MidiMessageContainer) => List[MidiMessageContainer]): MidiNode = apply("", func)
+  def apply(name: String, func: MidiMessageContainer => List[MidiMessageContainer]) = {
     new MidiNode() {
 
       override def getName() = {
         name
       }
 
-      override def processMessage(message: MidiMessageContainer, timestamp: Long, chain: List[MidiNode]): Unit = {
-        func(message, timestamp).foreach( m => super.send(m._1, m._2, chain))
+      override def processMessage(message: MidiMessageContainer, chain: List[MidiNode]): Unit = {
+        func(message).foreach(super.send(_, chain))
       }
     }
   }
@@ -40,23 +40,23 @@ object MidiNode {
         this
       }
 
-      override def processMessage(message: MidiMessageContainer, timeStamp: Long, chain: List[MidiNode]) {
-        next.processMessage(message, timeStamp, null)
+      override def processMessage(message: MidiMessageContainer, chain: List[MidiNode]) {
+        next.processMessage(message, null)
       }
     }
 
     transmitter.setReceiver(new Receiver {
 
-      override def send(message: MidiMessage, timeStamp: Long): Unit = {
+      override def send(message: MidiMessage, timeStamp: Long) {
         try {
-          midiNode.processMessage(new MidiMessageContainer(message), timeStamp, null)
+          midiNode.processMessage(new MidiMessageContainer(message, timeStamp = timeStamp), null)
         }
         catch {
           case e: Exception => println(e.printStackTrace())
         }
       }
 
-      override def close(): Unit = midiNode.close()
+      override def close() = midiNode.close()
     })
 
     midiNode
@@ -65,9 +65,8 @@ object MidiNode {
   def apply(receiver: Receiver) = {
 
     val midiNode = new MidiNode {
-      override def processMessage(message: MidiMessageContainer, timeStamp: Long, chain: List[MidiNode]): Unit = {
-        receiver.send(message.get, timeStamp)
-        List()
+      override def processMessage(message: MidiMessageContainer, chain: List[MidiNode]): Unit = {
+        receiver.send(message.get, message.getTimeStamp)
       }
     }
 
@@ -78,8 +77,10 @@ object MidiNode {
 trait MidiNode {
 
   def log(str: String, message: MidiMessageContainer): Unit = {
-    (1L to message.getDepth).foreach(_ => printf("\t"))
-    println(str)
+    if (DEBUG) {
+      (1L to message.getDepth).foreach(_ => printf("\t"))
+      println(str)
+    }
   }
 
   def getName() = {
@@ -105,23 +106,22 @@ trait MidiNode {
     this.connect(node)
   }
 
-  final def receive(message: MidiMessageContainer, timeStamp: Long, chain: List[MidiNode]) {
+  final def receive(message: MidiMessageContainer, chain: List[MidiNode]) {
     log(s"Node: ${this.getName}", message)
-    processMessage(message, timeStamp, chain)
+    processMessage(message, chain)
   }
 
-  def processMessage(message: MidiMessageContainer, timeStamp: Long, chain: List[MidiNode]) {
-    send(message, timeStamp, chain)
+  def processMessage(message: MidiMessageContainer, chain: List[MidiNode]) {
+    send(message, chain)
   }
 
-  def send(message: MidiMessageContainer, timeStamp: Long, chain: List[MidiNode]) {
+  def send(message: MidiMessageContainer, chain: List[MidiNode]) {
     if(chain.nonEmpty) {
       val newMessage = message.clone()
       newMessage.incDepth()
-      chain.head.receive(newMessage, timeStamp, chain.tail)
+      chain.head.receive(newMessage, chain.tail)
     }
   }
-
 
   def close(): Unit = this.close()
 }

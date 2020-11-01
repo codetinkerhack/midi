@@ -5,7 +5,7 @@ import javax.sound.midi.{MetaMessage, MidiMessage, ShortMessage}
 /**
   * Created by Evgeniy on 15/09/2014.
   */
-class MidiMessageContainer(message: MidiMessage, var depth: Int = 0) {
+class MidiMessageContainer(message: MidiMessage, var depth: Int = 0, chord: Chord = new Chord(Chord.NONE), timeStamp: Long = 0L) {
 
   private var hash: Int = 0
 
@@ -35,10 +35,20 @@ class MidiMessageContainer(message: MidiMessage, var depth: Int = 0) {
   override def clone(): MidiMessageContainer = {
     message match {
       case m: ShortMessage =>
-        new MidiMessageContainer(m.clone().asInstanceOf[ShortMessage], depth)
+        new MidiMessageContainer(m.clone().asInstanceOf[ShortMessage], depth, chord, timeStamp = 0L)
 
       case m: MetaMessage =>
-        new MidiMessageContainer(m.clone().asInstanceOf[MetaMessage], depth)
+        new MidiMessageContainer(m.clone().asInstanceOf[MetaMessage], depth, chord, timeStamp = 0L)
+    }
+  }
+
+  def getNoteOff(): MidiMessageContainer = {
+    message match {
+      case m: ShortMessage if m.getCommand == ShortMessage.NOTE_ON =>
+        val noteOff = new ShortMessage(ShortMessage.NOTE_OFF, m.getChannel, m.getData1, 0)
+        new MidiMessageContainer(noteOff, depth, chord, 0L)
+      case m: ShortMessage if m.getCommand == ShortMessage.NOTE_OFF =>
+        new MidiMessageContainer(message, depth, chord, 0L)
     }
   }
 
@@ -64,5 +74,8 @@ class MidiMessageContainer(message: MidiMessage, var depth: Int = 0) {
 
   def get = message
 
+  def getChord = chord
+
+  def getTimeStamp = timeStamp
 
 }
