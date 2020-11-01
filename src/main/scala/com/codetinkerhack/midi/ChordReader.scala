@@ -34,7 +34,7 @@ class ChordReader extends MidiNode {
           chordOn(keysCombo, send)
           val nothing = new String()
           this.keysCombo = keysCombo
-          send(new MidiMessageContainer(new MetaMessage(1, nothing.getBytes(), nothing.getBytes().length), message.getDepth, new Chord(Chord.NONE), timeStamp = 0L))
+          send(new MidiMessageContainer(new MetaMessage(1, nothing.getBytes(), nothing.getBytes().length), message.getDepth, Chord.NONE, timeStamp = 0L))
         }
 
       case m: ShortMessage if (m.getCommand == ShortMessage.NOTE_OFF) =>
@@ -45,7 +45,7 @@ class ChordReader extends MidiNode {
           chordOn(keysCombo, send)
           this.keysCombo = keysCombo
           val nothing = new String()
-          send(new MidiMessageContainer(new MetaMessage(1, nothing.getBytes(), nothing.getBytes().length), message.getDepth,  new Chord(Chord.NONE), timeStamp = 0L))
+          send(new MidiMessageContainer(new MetaMessage(1, nothing.getBytes(), nothing.getBytes().length), message.getDepth,  Chord.NONE, timeStamp = 0L))
         }
 
       case _ => send(message)

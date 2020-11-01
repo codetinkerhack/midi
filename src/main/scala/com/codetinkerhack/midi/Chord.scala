@@ -8,7 +8,7 @@ object Chord {
   val scaleMap = new HashMap[String, Array[Int]]()
   val noteToInt = new HashMap[String, Integer]()
 
-  val NONE = "N N"
+  val NONE = new Chord("N N")
   val B    = "B "
   val C    = "C "
   val C_#  = "C# "
@@ -39,7 +39,7 @@ object Chord {
   scaleMap.put(M7,   Array(0, 2, 3, 5, 7, 9, 10))
 
 
-  noteToInt.put(NONE, -100)
+  noteToInt.put(NONE.chord, -100)
   noteToInt.put(B, -1)
   noteToInt.put(C, 0)
   noteToInt.put(C_#, 1)

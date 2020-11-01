@@ -92,7 +92,7 @@ class ChordModifier extends MidiNode {
 
   private def updateChord(newChord: Chord, send: MidiMessageContainer => Unit) = {
     notesOn.synchronized {
-      if (newChord.chord != Chord.NONE && newChord != currentChord && newChord != null) {
+      if (newChord != Chord.NONE && newChord != currentChord && newChord != null) {
         notesTranspose(currentChord, newChord, send)
         this.currentChord = newChord
       }

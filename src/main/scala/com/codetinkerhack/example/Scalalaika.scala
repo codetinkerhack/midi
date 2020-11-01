@@ -118,7 +118,7 @@ object Scalalaika extends App {
     private val baseNote = 48
     private val scale = Array(0, 4, 7, 10, 16)
 
-    private var currentChord = new Chord(Chord.NONE)
+    private var currentChord = Chord.NONE
 
     private var timeLapsed = 0L
     private var notesOnCache = Set[MidiMessageContainer]()
@@ -132,7 +132,7 @@ object Scalalaika extends App {
 
         case m: MetaMessage if m.getType == 2 => {
           val newChord = message.getChord
-          if (currentChord == null || (currentChord.chord != newChord.chord && newChord.chord != Chord.NONE)) {
+          if (currentChord == null || (currentChord.chord != newChord.chord && newChord != Chord.NONE)) {
             currentChord = newChord
             notesOnCache.foreach(n => send(n.getNoteOff()))
             notesOnCache = Set.empty
@@ -140,7 +140,7 @@ object Scalalaika extends App {
           send(message)
         }
 
-        case m: ShortMessage if m.getCommand == CONTROL_CHANGE && m.getData1 == 2 && currentChord != new Chord(Chord.NONE) => {
+        case m: ShortMessage if m.getCommand == CONTROL_CHANGE && m.getData1 == 2 && currentChord != Chord.NONE => {
           val ccy = m.getData2
 
           val note = baseNote + scale((128 - ccy) / 26) + offset
@@ -177,7 +177,7 @@ object Scalalaika extends App {
     // Key combos to Chord mapping
 
     //No chord - all off
-    chordReader.addToChordMap("0".b, new Chord(Chord.NONE))
+    chordReader.addToChordMap("0".b, Chord.NONE)
     //F
     chordReader.addToChordMap("1".b, new Chord("F maj"))
     // Fm

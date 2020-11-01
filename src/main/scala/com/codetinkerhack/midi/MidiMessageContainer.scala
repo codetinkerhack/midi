@@ -5,7 +5,7 @@ import javax.sound.midi.{MetaMessage, MidiMessage, ShortMessage}
 /**
   * Created by Evgeniy on 15/09/2014.
   */
-class MidiMessageContainer(message: MidiMessage, var depth: Int = 0, chord: Chord = new Chord(Chord.NONE), timeStamp: Long = 0L) {
+class MidiMessageContainer(message: MidiMessage, var depth: Int = 0, chord: Chord = Chord.NONE, timeStamp: Long = 0L) {
 
   private var hash: Int = 0
 
