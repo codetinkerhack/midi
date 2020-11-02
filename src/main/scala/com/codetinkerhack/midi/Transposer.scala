@@ -9,10 +9,10 @@ import scala.collection.immutable.List
   */
 case class Transposer(i: Int)  extends MidiNode {
 
-  override def processMessage(message: MidiMessageContainer, send: MidiMessageContainer => Unit): Unit = {
+  override def processMessage(message: MMessage, send: MMessage => Unit): Unit = {
     message.get match {
       case m: ShortMessage => {
-        val newMessage = new MidiMessageContainer(new ShortMessage(m.getCommand, m.getChannel, m.getData1+i, m.getData2), 0, message.getChord, timeStamp = 0L)
+        val newMessage = new MMessage(new ShortMessage(m.getCommand, m.getChannel, m.getData1+i, m.getData2), 0, message.getChord, timeStamp = 0L)
         send(newMessage)
       }
       case _ => send(message)

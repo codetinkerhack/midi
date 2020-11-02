@@ -9,49 +9,28 @@ object Chord {
   val noteToInt = new HashMap[String, Integer]()
 
   val NONE = new Chord("N N")
-  val B    = "B "
-  val C    = "C "
-  val C_#  = "C# "
-  val D    = "D "
-  val D_#  = "D# "
-  val E    = "E "
-  val F    = "F "
-  val F_#  = "F# "
-  val G    = "G "
-  val G_#  = "G# "
-  val A    = "A "
-  val A_#  = "A# "
 
-  val MIN  = "min"
-  val MAJ  = "maj"
-  val AUG  = "aug"
-  val DIM  = "dim"
-  val MAJ7 = "maj7"
-  val _7   = "7"
-  val M7   = "m7"
-
-  scaleMap.put(MIN,  Array(0, 2, 3, 5, 7, 9, 12))
-  scaleMap.put(MAJ,  Array(0, 2, 4, 5, 7, 9, 12))
-  scaleMap.put(AUG,  Array(0, 2, 4, 5, 8, 9, 12))
-  scaleMap.put(DIM,  Array(0, 2, 3, 5, 6, 9, 12))
-  scaleMap.put(MAJ7, Array(0, 2, 4, 5, 7, 9, 11))
-  scaleMap.put(_7,   Array(0, 2, 4, 5, 7, 9, 10))
-  scaleMap.put(M7,   Array(0, 2, 3, 5, 7, 9, 10))
-
+  scaleMap.put("min", Array(0, 2, 3, 5, 7, 9, 12))
+  scaleMap.put("maj", Array(0, 2, 4, 5, 7, 9, 12))
+  scaleMap.put("aug", Array(0, 2, 4, 5, 8, 9, 12))
+  scaleMap.put("dim", Array(0, 2, 3, 5, 6, 9, 12))
+  scaleMap.put("maj7", Array(0, 2, 4, 5, 7, 9, 11))
+  scaleMap.put("7", Array(0, 2, 4, 5, 7, 9, 10))
+  scaleMap.put("m7", Array(0, 2, 3, 5, 7, 9, 10))
 
   noteToInt.put(NONE.chord, -100)
-  noteToInt.put(B, -1)
-  noteToInt.put(C, 0)
-  noteToInt.put(C_#, 1)
-  noteToInt.put(D, 2)
-  noteToInt.put(D_#, 3)
-  noteToInt.put(E, 4)
-  noteToInt.put(F, 5)
-  noteToInt.put(F_#, 6)
-  noteToInt.put(G, 7)
-  noteToInt.put(G_#, 8)
-  noteToInt.put(A, 9)
-  noteToInt.put(A_#, 10)
+  noteToInt.put("B ", -1)
+  noteToInt.put("C ", 0)
+  noteToInt.put("C#", 1)
+  noteToInt.put("D ", 2)
+  noteToInt.put("D#", 3)
+  noteToInt.put("E ", 4)
+  noteToInt.put("F ", 5)
+  noteToInt.put("F#", 6)
+  noteToInt.put("G ", 7)
+  noteToInt.put("G#", 8)
+  noteToInt.put("A ", 9)
+  noteToInt.put("A#", 10)
 
   def chordNoteReMap(chordFrom: Chord, chordTo: Chord, note: Int): Int = {
     val offset = chordTo.getChordBaseNote - chordFrom.getChordBaseNote

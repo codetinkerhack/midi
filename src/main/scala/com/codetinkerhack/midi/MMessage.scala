@@ -5,7 +5,7 @@ import javax.sound.midi.{MetaMessage, MidiMessage, ShortMessage}
 /**
   * Created by Evgeniy on 15/09/2014.
   */
-class MidiMessageContainer(message: MidiMessage, var depth: Int = 0, chord: Chord = Chord.NONE, timeStamp: Long = 0L) {
+class MMessage(message: MidiMessage, var depth: Int = 0, chord: Chord = Chord.NONE, timeStamp: Long = 0L) {
 
   private var hash: Int = 0
 
@@ -16,8 +16,8 @@ class MidiMessageContainer(message: MidiMessage, var depth: Int = 0, chord: Chor
   }
 
   override def equals(o: Any): Boolean = {
-    if (!(o.isInstanceOf[MidiMessageContainer])) return false
-    val that = o.asInstanceOf[MidiMessageContainer]
+    if (!(o.isInstanceOf[MMessage])) return false
+    val that = o.asInstanceOf[MMessage]
     hash == that.hashCode
   }
 
@@ -32,23 +32,23 @@ class MidiMessageContainer(message: MidiMessage, var depth: Int = 0, chord: Chor
         message.getMessage.hashCode()
     }
   }
-  override def clone(): MidiMessageContainer = {
+  override def clone(): MMessage = {
     message match {
       case m: ShortMessage =>
-        new MidiMessageContainer(m.clone().asInstanceOf[ShortMessage], depth, chord, timeStamp = 0L)
+        new MMessage(m.clone().asInstanceOf[ShortMessage], depth, chord, timeStamp = 0L)
 
       case m: MetaMessage =>
-        new MidiMessageContainer(m.clone().asInstanceOf[MetaMessage], depth, chord, timeStamp = 0L)
+        new MMessage(m.clone().asInstanceOf[MetaMessage], depth, chord, timeStamp = 0L)
     }
   }
 
-  def getNoteOff(): MidiMessageContainer = {
+  def getNoteOff(): MMessage = {
     message match {
       case m: ShortMessage if m.getCommand == ShortMessage.NOTE_ON =>
         val noteOff = new ShortMessage(ShortMessage.NOTE_OFF, m.getChannel, m.getData1, 0)
-        new MidiMessageContainer(noteOff, depth, chord, 0L)
+        new MMessage(noteOff, depth, chord, 0L)
       case m: ShortMessage if m.getCommand == ShortMessage.NOTE_OFF =>
-        new MidiMessageContainer(message, depth, chord, 0L)
+        new MMessage(message, depth, chord, 0L)
     }
   }
 

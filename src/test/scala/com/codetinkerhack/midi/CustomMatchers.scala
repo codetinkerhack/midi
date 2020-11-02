@@ -5,9 +5,9 @@ import org.scalatest.matchers.{MatchResult, Matcher}
 
 trait CustomMatchers {
 
-  class MidiMessageMatcher(message: MidiMessageContainer) extends Matcher[MidiMessageContainer] {
+  class MidiMessageMatcher(message: MMessage) extends Matcher[MMessage] {
 
-    def apply(left: MidiMessageContainer) = {
+    def apply(left: MMessage) = {
 
       MatchResult(
         left.get.asInstanceOf[ShortMessage].getCommand == message.get.asInstanceOf[ShortMessage].getCommand
@@ -20,7 +20,7 @@ trait CustomMatchers {
     }
   }
 
-  def matchMessage(message: MidiMessageContainer) = new MidiMessageMatcher(message)
+  def matchMessage(message: MMessage) = new MidiMessageMatcher(message)
 }
 
 // Make them easy to import with:

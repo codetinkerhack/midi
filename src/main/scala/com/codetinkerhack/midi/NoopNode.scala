@@ -10,7 +10,7 @@ import scala.collection.immutable.List
   */
 class NoopNode extends MidiNode {
 
-  override def processMessage(message: MidiMessageContainer, send: MidiMessageContainer => Unit): Unit = {
+  override def processMessage(message: MMessage, send: MMessage => Unit): Unit = {
     //black hole...
   }
 

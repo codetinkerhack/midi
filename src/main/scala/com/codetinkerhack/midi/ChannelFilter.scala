@@ -9,7 +9,7 @@ import scala.collection.immutable.List
   */
 case class ChannelFilter(channel: Int) extends MidiNode {
 
-  override def processMessage(message: MidiMessageContainer, send: MidiMessageContainer => Unit): Unit = {
+  override def processMessage(message: MMessage, send: MMessage => Unit): Unit = {
     message.get match {
       case m: ShortMessage if m.getChannel != channel => {
         log(s"Filtered out message on channel: ${channel}, message: ${message.getType()}", message)

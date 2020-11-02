@@ -8,7 +8,7 @@ import scala.collection.immutable.TreeMap
   */
 class MidiDelay() extends MidiNode {
 
-  var queue = new TreeMap[Long, (MidiMessageContainer, MidiMessageContainer => Unit)]()
+  var queue = new TreeMap[Long, (MMessage, MMessage => Unit)]()
   new Scheduler()
 
   def getCurrentTimeMillis(): Long = {
@@ -51,7 +51,7 @@ class MidiDelay() extends MidiNode {
 
   }
 
-  override def processMessage(message: MidiMessageContainer, send: MidiMessageContainer => Unit): Unit = {
+  override def processMessage(message: MMessage, send: MMessage => Unit): Unit = {
 
     if (message.getTimeStamp == 0) {
       send(message)

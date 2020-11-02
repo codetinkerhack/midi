@@ -3,9 +3,9 @@ package com.codetinkerhack.midi
 import scala.collection.immutable.List
 
 class TestMidiNode extends MidiNode {
-  var history: List[MidiMessageContainer] = List()
+  var history: List[MMessage] = List()
 
-  override def processMessage(message: MidiMessageContainer, send: MidiMessageContainer => Unit): Unit = {
+  override def processMessage(message: MMessage, send: MMessage => Unit): Unit = {
     history = message :: history
   }
 
