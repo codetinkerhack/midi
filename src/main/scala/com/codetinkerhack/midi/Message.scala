@@ -5,7 +5,7 @@ import javax.sound.midi.{MetaMessage, MidiMessage, ShortMessage}
 /**
   * Created by Evgeniy on 15/09/2014.
   */
-class MMessage(message: MidiMessage, var depth: Int = 0, chord: Chord = Chord.NONE, timeStamp: Long = 0L) {
+class Message(message: MidiMessage, var depth: Int = 0, chord: Chord = Chord.NONE, timeStamp: Long = 0L) {
 
   private var hash: Int = 0
 
@@ -16,8 +16,8 @@ class MMessage(message: MidiMessage, var depth: Int = 0, chord: Chord = Chord.NO
   }
 
   override def equals(o: Any): Boolean = {
-    if (!(o.isInstanceOf[MMessage])) return false
-    val that = o.asInstanceOf[MMessage]
+    if (!(o.isInstanceOf[Message])) return false
+    val that = o.asInstanceOf[Message]
     hash == that.hashCode
   }
 
@@ -32,23 +32,23 @@ class MMessage(message: MidiMessage, var depth: Int = 0, chord: Chord = Chord.NO
         message.getMessage.hashCode()
     }
   }
-  override def clone(): MMessage = {
+  override def clone(): Message = {
     message match {
       case m: ShortMessage =>
-        new MMessage(m.clone().asInstanceOf[ShortMessage], depth, chord, timeStamp = 0L)
+        new Message(m.clone().asInstanceOf[ShortMessage], depth, chord, timeStamp = 0L)
 
       case m: MetaMessage =>
-        new MMessage(m.clone().asInstanceOf[MetaMessage], depth, chord, timeStamp = 0L)
+        new Message(m.clone().asInstanceOf[MetaMessage], depth, chord, timeStamp = 0L)
     }
   }
 
-  def getNoteOff(): MMessage = {
+  def getNoteOff(): Message = {
     message match {
       case m: ShortMessage if m.getCommand == ShortMessage.NOTE_ON =>
         val noteOff = new ShortMessage(ShortMessage.NOTE_OFF, m.getChannel, m.getData1, 0)
-        new MMessage(noteOff, depth, chord, 0L)
+        new Message(noteOff, depth, chord, 0L)
       case m: ShortMessage if m.getCommand == ShortMessage.NOTE_OFF =>
-        new MMessage(message, depth, chord, 0L)
+        new Message(message, depth, chord, 0L)
     }
   }
 

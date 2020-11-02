@@ -10,9 +10,9 @@ class ChordModifier extends MidiNode {
 
   private val CHORD_DONE = "CHORD_DONE"
   private val CHORD_READING = "CHORD_READING"
-  private val notesOn = new HashSet[MMessage]
+  private val notesOn = new HashSet[Message]
   private var state = CHORD_DONE
-  private var notesStash = List[MMessage]()
+  private var notesStash = List[Message]()
   private var baseChord = new Chord("C 7")
   private var currentChord = new Chord("C 7")
 
@@ -22,7 +22,7 @@ class ChordModifier extends MidiNode {
 
   def getCurrentChord(): Chord = currentChord
 
-  override def processMessage(message: MMessage, send: MMessage => Unit): Unit = {
+  override def processMessage(message: Message, send: Message => Unit): Unit = {
 
     notesOn.synchronized {
       message.get match {
@@ -38,8 +38,8 @@ class ChordModifier extends MidiNode {
             val m = n.get.asInstanceOf[ShortMessage]
             val transposedMessage = new ShortMessage(m.getStatus, Chord.chordNoteReMap(n.getChord, currentChord,
                m.getData1), m.getData2)
-            notesOn.add(new MMessage(transposedMessage, chord = currentChord))
-            send(new MMessage(transposedMessage, chord = currentChord))
+            notesOn.add(new Message(transposedMessage, chord = currentChord))
+            send(new Message(transposedMessage, chord = currentChord))
           })
           notesStash = List()
 
@@ -58,12 +58,12 @@ class ChordModifier extends MidiNode {
                 m.getData1), m.getData2)
 
               if (state == CHORD_DONE) {
-                notesOn.add(new MMessage(transposedMessage, chord = message.getChord))
-                send(new MMessage(transposedMessage, chord = message.getChord))
+                notesOn.add(new Message(transposedMessage, chord = message.getChord))
+                send(new Message(transposedMessage, chord = message.getChord))
               }
               else if (state == CHORD_READING && m.getCommand == ShortMessage.NOTE_OFF) {
-                notesOn.remove(new MMessage(transposedMessage, chord = message.getChord))
-                send(new MMessage(transposedMessage, chord = message.getChord).getNoteOff())
+                notesOn.remove(new Message(transposedMessage, chord = message.getChord))
+                send(new Message(transposedMessage, chord = message.getChord).getNoteOff())
               }
               else if (state == CHORD_READING && m.getCommand == ShortMessage.NOTE_ON) {
                 println(s"Stashing")
@@ -90,7 +90,7 @@ class ChordModifier extends MidiNode {
     }
   }
 
-  private def updateChord(newChord: Chord, send: MMessage => Unit) = {
+  private def updateChord(newChord: Chord, send: Message => Unit) = {
     notesOn.synchronized {
       if (newChord != Chord.NONE && newChord != currentChord && newChord != null) {
         notesTranspose(currentChord, newChord, send)
@@ -99,7 +99,7 @@ class ChordModifier extends MidiNode {
     }
   }
 
-  private def notesTranspose(oldChord: Chord, newChord: Chord, send: MMessage => Unit) {
+  private def notesTranspose(oldChord: Chord, newChord: Chord, send: Message => Unit) {
 
     println(s"Currently on: ${notesOn.size}")
 

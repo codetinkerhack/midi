@@ -14,15 +14,15 @@ object MidiNode {
   def apply(): MidiNode = apply("")
   def apply(name: String): MidiNode = MidiNode(message => List(message))
 
-  def apply(func: (MMessage) => List[MMessage]): MidiNode = apply("", func)
-  def apply(name: String, func: MMessage => List[MMessage]) = {
+  def apply(func: (Message) => List[Message]): MidiNode = apply("", func)
+  def apply(name: String, func: Message => List[Message]) = {
     new MidiNode() {
 
       override def getName() = {
         name
       }
 
-      override def processMessage(message: MMessage, send: MMessage => Unit): Unit = {
+      override def processMessage(message: Message, send: Message => Unit): Unit = {
         func(message).foreach(send(_))
       }
     }
@@ -36,7 +36,7 @@ object MidiNode {
 
       override def send(message: MidiMessage, timeStamp: Long) {
         try {
-          midiNode.send(new MMessage(message, timeStamp = timeStamp))(null)
+          midiNode.send(new Message(message, timeStamp = timeStamp))(null)
         }
         catch {
           case e: Exception => println(e.printStackTrace())
@@ -52,7 +52,7 @@ object MidiNode {
   def apply(receiver: Receiver) = {
 
     val midiNode = new MidiNode {
-      override def processMessage(message: MMessage, send: MMessage => Unit): Unit = {
+      override def processMessage(message: Message, send: Message => Unit): Unit = {
         receiver.send(message.get, message.getTimeStamp)
       }
     }
@@ -63,7 +63,7 @@ object MidiNode {
 
 trait MidiNode {
 
-  def log(str: String, message: MMessage): Unit = {
+  def log(str: String, message: Message): Unit = {
     if (DEBUG) {
       (1L to message.getDepth).foreach(_ => printf("\t"))
       println(str)
@@ -93,16 +93,16 @@ trait MidiNode {
     this.connect(node)
   }
 
-  final def receive(message: MMessage, chain: List[MidiNode]) {
+  final def receive(message: Message, chain: List[MidiNode]) {
     log(s"Node: ${this.getName}", message)
     processMessage(message, message => this.send(message)(chain))
   }
 
-  def processMessage(message: MMessage, send: MMessage => Unit): Unit = {
+  def processMessage(message: Message, send: Message => Unit): Unit = {
     send(message)
   }
 
-  def send(message: MMessage)(chain: List[MidiNode]) {
+  def send(message: Message)(chain: List[MidiNode]) {
     if(chain != null && chain.nonEmpty) {
       val newMessage = message.clone()
       newMessage.incDepth()

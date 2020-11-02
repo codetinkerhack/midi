@@ -9,7 +9,7 @@ object MidiSequencer {
 
   val receiver = new Receiver {
     override def send(m: MidiMessage, timeStamp: Long): Unit = {
-      midiSequencer.processMessage(new MMessage(m, chord = Chord.NONE, timeStamp = 0L), null)
+      midiSequencer.processMessage(new Message(m, chord = Chord.NONE, timeStamp = 0L), null)
     }
 
     override def close(): Unit = { }

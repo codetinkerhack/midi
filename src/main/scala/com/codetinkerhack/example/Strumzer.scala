@@ -97,9 +97,9 @@ object Strumzer extends App {
 
       message.get match {
         case m: ShortMessage if m.getCommand == NOTE_OFF || m.getCommand == NOTE_ON => {
-          var messageList: List[MMessage] = List()
+          var messageList: List[Message] = List()
           //messageList = (new ShortMessage(PROGRAM_CHANGE, 1, soloInstrument((m.getData1 - 36) / 16), 0), 0L) :: messageList
-          messageList = new MMessage(new ShortMessage(m.getCommand, 0, (m.getData1 - 36) % 16, m.getData2)) :: messageList
+          messageList = new Message(new ShortMessage(m.getCommand, 0, (m.getData1 - 36) % 16, m.getData2)) :: messageList
           messageList
         }
         case _ => List(message)
@@ -116,11 +116,11 @@ object Strumzer extends App {
     private var currentChord = Chord.NONE
 
     private var timeLapsed = 0L
-    private var notesOnCache = Set[MMessage]()
+    private var notesOnCache = Set[Message]()
     private var offset = 0
 
 
-    override def processMessage(message: MMessage, send: MMessage => Unit): Unit = {
+    override def processMessage(message: Message, send: Message => Unit): Unit = {
       message.get match {
 
         case m: MetaMessage if m.getType == 2 => {
@@ -137,7 +137,7 @@ object Strumzer extends App {
           val ccy = m.getData2
 
           val note = baseNote + scale((128 - ccy) / 26) + offset
-          val midiCNote = new MMessage(new ShortMessage(ShortMessage.NOTE_ON, 1, note, 64), chord = currentChord)
+          val midiCNote = new Message(new ShortMessage(ShortMessage.NOTE_ON, 1, note, 64), chord = currentChord)
 
           if (!notesOnCache(midiCNote) || (notesOnCache(midiCNote) && (currentTimeMillis() - timeLapsed) > 50)) {
             if (currentTimeMillis() - timeLapsed > 100) {
@@ -151,8 +151,8 @@ object Strumzer extends App {
         }
 
         case message: ShortMessage if message.getCommand == CONTROL_CHANGE && message.getData1 == 1 => {
-          offset = (message.getData2 / 32)
-          send(new MMessage(new ShortMessage(PITCH_BEND, 1, 0, message.getData2 % 8)))
+          offset = message.getData2 / 32
+          send(new Message(new ShortMessage(PITCH_BEND, 1, 0, message.getData2 % 8)))
         }
 
         case _ => send(message)
