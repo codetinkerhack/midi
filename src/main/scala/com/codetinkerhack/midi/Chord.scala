@@ -8,7 +8,7 @@ object Chord {
   val scaleMap = new HashMap[String, Array[Int]]()
   val noteToInt = new HashMap[String, Integer]()
 
-  val NONE = new Chord("N N")
+  val NONE = new Chord("NONE")
 
   scaleMap.put("min", Array(0, 2, 3, 5, 7, 9, 12))
   scaleMap.put("maj", Array(0, 2, 4, 5, 7, 9, 12))
@@ -18,7 +18,6 @@ object Chord {
   scaleMap.put("7", Array(0, 2, 4, 5, 7, 9, 10))
   scaleMap.put("m7", Array(0, 2, 3, 5, 7, 9, 10))
 
-  noteToInt.put(NONE.chord, -100)
   noteToInt.put("B ", -1)
   noteToInt.put("C ", 0)
   noteToInt.put("C#", 1)
@@ -64,6 +63,9 @@ class Chord(val chord: String) {
 
   @BeanProperty
   val chordType = chord.substring(2).trim()
+
+  if(chord != "NONE" && (chordBaseNote == null || chordType == null))
+    throw new Exception("No such cord exist")
 
   def getScale = scaleMap.get(chordType)
 
