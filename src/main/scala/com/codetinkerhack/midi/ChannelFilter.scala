@@ -12,12 +12,12 @@ case class ChannelFilter(channel: Int) extends MidiNode {
   override def processMessage(message: Message, send: Message => Unit): Unit = {
     message.get match {
       case m: ShortMessage if m.getChannel != channel => {
-        log(s"Filtered out message on channel: ${channel}, message: ${message.getType()}", message)
+        log(s"Filtered out message on channel: ${channel}, message: ${message.toString()}", message)
 //        noop
       }
 
       case _ =>
-        log(s"Filter passed through, channel: ${channel}, message: ${message.getType()}", message)
+        log(s"Filter passed through, channel: ${channel}, message: ${message.toString()}", message)
         send(message)
     }
   }

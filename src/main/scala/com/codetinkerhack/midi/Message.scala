@@ -52,7 +52,7 @@ class Message(message: MidiMessage, var depth: Int = 0, chord: Chord = Chord.NON
     }
   }
 
-  def getType(): String = {
+  override def toString(): String = {
     message match {
       case m: ShortMessage if m.getCommand == ShortMessage.NOTE_ON || m.getCommand == ShortMessage.NOTE_OFF =>
         "NoteOn || NoteOff message"

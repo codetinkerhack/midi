@@ -22,14 +22,13 @@ object Strumzer extends App {
     val chordReader = new ChordReader()
     initChordReader(chordReader)
 
-    val midiNanoPad = MidiNode()
     val midiDelay = new MidiDelay()
     val strumzer = getStrumzer()
     val chordKeysReader = getChordKeysReader()
     val chordModifier = new ChordModifier()
     val midiOut = MidiNode(output.getReceiver)
 
-    val chain = midiNanoPad
+    val chain = MidiNode()
       .connect(MidiFilter { message =>
         message.get match {
           case m: ShortMessage if m.getCommand == NOTE_ON || m.getCommand == NOTE_OFF => true
@@ -51,7 +50,7 @@ object Strumzer extends App {
       .connect(MidiUtil.debugMidi)
       .connect(midiOut)
 
-    val chain1 = midiNanoPad
+    val chain1 = MidiNode()
       .connect(ChannelRouter(1)).connect(MidiFilter { message =>
         message.get match {
           case m: ShortMessage if m.getCommand == CONTROL_CHANGE => true
@@ -72,17 +71,9 @@ object Strumzer extends App {
       .connect(MidiUtil.debugMidi)
       .connect(midiOut)
 
-    val chain2 = MidiParallel(chain1, chain)
-    MidiNode(inputNanoPad.getTransmitters.get(0)).connect(chain2)
-    import javax.sound.midi.ShortMessage._
-//    chain2.processMessage(new MidiMessageContainer(new ShortMessage(NOTE_ON, 0, 36, 0)), 0L, null)
-//    Thread.sleep(100)
-//    chain2.processMessage(new MidiMessageContainer(new ShortMessage(CONTROL_CHANGE, 0, 2, 0)), 0L, null)
-//    Thread.sleep(1000)
-//    chain2.processMessage(new MidiMessageContainer(new ShortMessage(NOTE_OFF, 0, 36, 0)), 0L, null)
-//    chain2.processMessage(new MidiMessageContainer(new ShortMessage(NOTE_ON, 0, 37, 0)), 0L, null)
-//    Thread.sleep(100)
-//    chain2.processMessage(new MidiMessageContainer(new ShortMessage(CONTROL_CHANGE, 0, 2, 30)), 0L, null)
+    MidiNode(inputNanoPad.getTransmitters.get(0))
+      .connect(MidiParallel(chain, chain1))
+
   }
 
 
