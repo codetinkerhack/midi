@@ -32,7 +32,7 @@ class MidiNodeTest extends AnyFlatSpec with should.Matchers {
     message.getTimeStamp should equal (0L)
   }
 
-  it should "transmit message only on specific channel output matching message channel" in {
+  it should "transmit message to parallel chains only on specific channel. Message received on matching message channel" in {
     val node = MidiNode()
     val testNode = new TestMidiNode()
     val testNode1 = new TestMidiNode()
@@ -40,9 +40,27 @@ class MidiNodeTest extends AnyFlatSpec with should.Matchers {
     val chain = node.out(1).connect(testNode)
     val chain1 = node.out(2).connect(testNode1)
 
-    MidiParallel(chain, chain1).send(new Message(new ShortMessage(NOTE_ON, 1, 1, 1),0, timeStamp = 0L))( null)
+    MidiParallel(chain, chain1).send(new Message(new ShortMessage(NOTE_ON, 1, 1, 1)))( null)
 
     val message = testNode1.getLastMessage()
     message should equal(null)
+  }
+
+  it should "transmit message to parallel chains on any channel. Message received output by both receiver" in {
+    val node = MidiNode()
+    val testNode = new TestMidiNode()
+    val testNode1 = new TestMidiNode()
+
+    val chain = node.connect(testNode)
+    val chain1 = node.connect(testNode1)
+
+    val message = new Message(new ShortMessage(NOTE_ON, 1, 1, 1))
+    MidiParallel(chain, chain1).send(message)( null)
+
+    val message1 = testNode.getLastMessage()
+    message1 should equal(message)
+
+    val message2 = testNode1.getLastMessage()
+    message2 should equal(message)
   }
 }
