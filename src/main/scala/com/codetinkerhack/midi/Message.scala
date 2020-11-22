@@ -35,10 +35,10 @@ class Message(message: MidiMessage, var depth: Int = 0, chord: Chord = Chord.NON
   override def clone(): Message = {
     message match {
       case m: ShortMessage =>
-        new Message(m.clone().asInstanceOf[ShortMessage], depth, chord, timeStamp = 0L)
+        new Message(m.clone().asInstanceOf[ShortMessage], depth+1, chord, timeStamp = 0L)
 
       case m: MetaMessage =>
-        new Message(m.clone().asInstanceOf[MetaMessage], depth, chord, timeStamp = 0L)
+        new Message(m.clone().asInstanceOf[MetaMessage], depth+1, chord, timeStamp = 0L)
     }
   }
 
@@ -52,7 +52,7 @@ class Message(message: MidiMessage, var depth: Int = 0, chord: Chord = Chord.NON
     }
   }
 
-  override def toString(): String = {
+  override def toString: String = {
     message match {
       case m: ShortMessage if m.getCommand == ShortMessage.NOTE_ON || m.getCommand == ShortMessage.NOTE_OFF =>
         "NoteOn || NoteOff message"
@@ -68,14 +68,11 @@ class Message(message: MidiMessage, var depth: Int = 0, chord: Chord = Chord.NON
     }
   }
 
-  def getDepth = depth
+  def getDepth: Int = depth
 
-  def incDepth() = { depth = depth + 1 }
+  def get: MidiMessage = message
 
-  def get = message
+  def getChord: Chord = chord
 
-  def getChord = chord
-
-  def getTimeStamp = timeStamp
-
+  def getTimeStamp: Long = timeStamp
 }

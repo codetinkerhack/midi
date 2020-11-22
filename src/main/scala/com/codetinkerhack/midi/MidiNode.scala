@@ -10,6 +10,30 @@ import scala.collection.immutable._
   */
 object MidiNode {
   val DEBUG = false
+  var handlers: List[() => Unit] = List()
+
+  final def register1MsTimedHandler(handler: () => Unit): Unit = {
+    handlers = handler :: handlers
+  }
+
+  def getCurrentTimeMillis(): Long = {
+    System.nanoTime / 1000000l
+  }
+
+  var prevTime: Long = getCurrentTimeMillis()
+
+  new Thread() {
+    override def run() {
+      while (true) {
+        val nowTime = getCurrentTimeMillis()
+        if (nowTime >= prevTime + 1) {
+          prevTime = nowTime
+          handlers.foreach( _() )
+          Thread.sleep(1)
+        }
+      }
+    }
+  }.start()
 
   def apply(): MidiNode = apply("")
   def apply(name: String): MidiNode = MidiNode(message => List(message))
@@ -105,7 +129,6 @@ trait MidiNode {
   def send(message: Message)(chain: List[MidiNode]) {
     if(chain != null && chain.nonEmpty) {
       val newMessage = message.clone()
-      newMessage.incDepth()
       chain.head.receive(newMessage, chain.tail)
     }
   }

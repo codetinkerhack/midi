@@ -9,47 +9,22 @@ import scala.collection.immutable.TreeMap
 class MidiDelay() extends MidiNode {
 
   var queue = new TreeMap[Long, (Message, Message => Unit)]()
-  new Scheduler()
 
-  def getCurrentTimeMillis(): Long = {
-    System.nanoTime / 1000000l
-  }
+  MidiNode.register1MsTimedHandler(() => {
+    queue.synchronized {
+      val kv = queue.headOption
 
+      kv foreach { v =>
+        if (v._1 <= MidiNode.getCurrentTimeMillis()) {
 
-  class Scheduler() {
+          val (send, message) = (v._2._2, v._2._1)
+          send(message)
 
-    var prevTime = getCurrentTimeMillis()
-
-    new Thread() {
-      override def run() {
-        while (true) {
-
-          val nowTime = getCurrentTimeMillis()
-
-          if (nowTime >= prevTime + 1) {
-            prevTime = nowTime
-
-            queue.synchronized {
-              val kv = queue.headOption
-
-              kv foreach { v =>
-                if (v._1 <= nowTime) {
-                  println(s"Scheduler send ${v._1} and ${v._2}")
-                  v._2._2(v._2._1)
-
-                  queue = queue.tail
-                }
-              }
-            }
-          }
-          else
-            Thread.sleep(10)
+          queue = queue.tail
         }
       }
-
-    }.start()
-
-  }
+    }
+  })
 
   override def processMessage(message: Message, send: Message => Unit): Unit = {
 
@@ -58,7 +33,7 @@ class MidiDelay() extends MidiNode {
     }
     else {
       queue.synchronized {
-        queue += ((message.getTimeStamp + getCurrentTimeMillis) -> (message, send))
+        queue += ((message.getTimeStamp + MidiNode.getCurrentTimeMillis) -> (message, send))
       }
     }
   }
